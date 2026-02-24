@@ -18,9 +18,11 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
+          email: string | null
           id: string
           is_disabled: boolean
           owner_name: string
+          password_display: string | null
           phone: string
           shop_name: string
           updated_at: string
@@ -29,9 +31,11 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           is_disabled?: boolean
           owner_name: string
+          password_display?: string | null
           phone: string
           shop_name: string
           updated_at?: string
@@ -40,9 +44,11 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
+          email?: string | null
           id?: string
           is_disabled?: boolean
           owner_name?: string
+          password_display?: string | null
           phone?: string
           shop_name?: string
           updated_at?: string
