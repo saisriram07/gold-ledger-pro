@@ -37,7 +37,9 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
 
 function AdminRedirect({ children }: { children: React.ReactNode }) {
   const { isAdmin } = useAuth();
-  if (isAdmin) return <Navigate to="/admin" replace />;
+  if (isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
   return <>{children}</>;
 }
 
