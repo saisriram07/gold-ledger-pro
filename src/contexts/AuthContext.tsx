@@ -16,6 +16,7 @@ type AuthContextType = {
   profile: Profile | null;
   isAdmin: boolean;
   loading: boolean;
+  isDisabled: boolean;
   signOut: () => Promise<void>;
 };
 
@@ -25,6 +26,7 @@ const AuthContext = createContext<AuthContextType>({
   profile: null,
   isAdmin: false,
   loading: true,
+  isDisabled: false,
   signOut: async () => {},
 });
 
@@ -35,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isDisabled, setIsDisabled] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
@@ -44,6 +47,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       .eq("user_id", userId)
       .single();
     setProfile(data);
+    setIsDisabled(data?.is_disabled ?? false);
   };
 
   const fetchRole = async (userId: string) => {
@@ -70,6 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
           setIsAdmin(false);
+          setIsDisabled(false);
           setLoading(false);
         }
       }
@@ -93,7 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, profile, isAdmin, loading, signOut }}>
+    <AuthContext.Provider value={{ user, session, profile, isAdmin, loading, isDisabled, signOut }}>
       {children}
     </AuthContext.Provider>
   );

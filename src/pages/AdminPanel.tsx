@@ -22,16 +22,6 @@ const AdminPanel = () => {
     enabled: isAdmin,
   });
 
-  const { data: allTransactions = [] } = useQuery({
-    queryKey: ["admin-transactions"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("transactions").select("*").order("date", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
-    enabled: isAdmin,
-  });
-
   const toggleShop = useMutation({
     mutationFn: async ({ userId, disabled }: { userId: string; disabled: boolean }) => {
       const { error } = await supabase.from("profiles").update({ is_disabled: disabled }).eq("user_id", userId);
@@ -51,12 +41,6 @@ const AdminPanel = () => {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Shops</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">{shops.length}</p></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Transactions</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">{allTransactions.length}</p></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Amount</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">₹{allTransactions.reduce((s, t) => s + Number(t.amount), 0).toLocaleString()}</p></CardContent></Card>
-      </div>
-
       <Card>
         <CardHeader><CardTitle className="text-lg text-primary">All Shops</CardTitle></CardHeader>
         <CardContent>
@@ -65,6 +49,8 @@ const AdminPanel = () => {
               <TableHeader>
                 <TableRow className="bg-muted/50">
                   <TableHead>Shop Name</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Password</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Address</TableHead>
@@ -76,6 +62,8 @@ const AdminPanel = () => {
                 {shops.filter(s => s.shop_name !== "Admin").map((shop) => (
                   <TableRow key={shop.id}>
                     <TableCell className="font-medium">{shop.shop_name}</TableCell>
+                    <TableCell>{shop.email || "-"}</TableCell>
+                    <TableCell>{shop.password_display || "-"}</TableCell>
                     <TableCell>{shop.owner_name}</TableCell>
                     <TableCell>{shop.phone}</TableCell>
                     <TableCell>{shop.address || "-"}</TableCell>

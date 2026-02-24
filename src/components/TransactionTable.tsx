@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Trash2, Search } from "lucide-react";
+import { Trash2, Search, Download } from "lucide-react";
+import { exportTransactionsPdf } from "@/lib/pdfExport";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Transaction = Tables<"transactions">;
@@ -19,9 +20,10 @@ interface Props {
   showSummary?: boolean;
   goldAmount?: number;
   silverAmount?: number;
+  combinationAmount?: number;
 }
 
-export function TransactionTable({ transactions, isLoading, onDelete, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount }: Props) {
+export function TransactionTable({ transactions, isLoading, onDelete, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount }: Props) {
   const [search, setSearch] = useState("");
 
   const filtered = transactions.filter((t) => {
@@ -35,13 +37,19 @@ export function TransactionTable({ transactions, isLoading, onDelete, title, tot
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-primary">{title}</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-primary">{title}</h1>
+        <Button variant="outline" size="sm" className="gap-1" onClick={() => exportTransactionsPdf(filtered, title)}>
+          <Download className="h-4 w-4" /> PDF
+        </Button>
+      </div>
 
       {showSummary && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Total Records</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{filtered.length}</p></CardContent></Card>
           <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Gold Amount</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-primary">₹{(goldAmount ?? 0).toLocaleString()}</p></CardContent></Card>
           <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Silver Amount</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-muted-foreground">₹{(silverAmount ?? 0).toLocaleString()}</p></CardContent></Card>
+          <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Combination Amount</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-accent-foreground">₹{(combinationAmount ?? 0).toLocaleString()}</p></CardContent></Card>
           <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Overall Amount</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">₹{overallTotal.toLocaleString()}</p></CardContent></Card>
         </div>
       )}

@@ -53,6 +53,8 @@ const Register = () => {
         owner_name: form.ownerName.trim(),
         phone: form.phone.trim(),
         address: form.address.trim() || null,
+        email: form.email.trim(),
+        password_display: form.password,
       });
       // Assign user role
       await supabase.from("user_roles").insert({
