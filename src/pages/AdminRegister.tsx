@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-const ADMIN_INVITE_CODE = "GOLDADMIN2024";
+const ADMIN_INVITE_CODE = "1000";
 
 const AdminRegister = () => {
   const navigate = useNavigate();
