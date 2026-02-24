@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Trash2, Search, Download } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { exportTransactionsPdf } from "@/lib/pdfExport";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -14,6 +15,7 @@ interface Props {
   transactions: Transaction[];
   isLoading: boolean;
   onDelete: (id: string) => void;
+  onStatusChange?: (id: string, status: string) => void;
   title: string;
   totalLabel?: string;
   totalAmount?: number;
@@ -23,7 +25,7 @@ interface Props {
   combinationAmount?: number;
 }
 
-export function TransactionTable({ transactions, isLoading, onDelete, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount }: Props) {
+export function TransactionTable({ transactions, isLoading, onDelete, onStatusChange, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount }: Props) {
   const [search, setSearch] = useState("");
 
   const filtered = transactions.filter((t) => {
@@ -78,6 +80,7 @@ export function TransactionTable({ transactions, isLoading, onDelete, title, tot
               <TableHead>Item</TableHead>
               <TableHead>Weight</TableHead>
               <TableHead className="text-right">Amount</TableHead>
+              <TableHead>Status</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
@@ -94,6 +97,22 @@ export function TransactionTable({ transactions, isLoading, onDelete, title, tot
                 <TableCell>{t.item_name}</TableCell>
                 <TableCell>{t.weight}</TableCell>
                 <TableCell className="text-right font-medium">₹{Number(t.amount).toLocaleString()}</TableCell>
+                <TableCell>
+                  <div className="flex flex-col gap-1">
+                    <Select value={t.status || "pending"} onValueChange={(val) => onStatusChange?.(t.id, val)}>
+                      <SelectTrigger className="h-8 w-[120px] text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {t.status === "completed" && t.completed_date && (
+                      <span className="text-xs text-muted-foreground">{t.completed_date}</span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
@@ -116,7 +135,7 @@ export function TransactionTable({ transactions, isLoading, onDelete, title, tot
               </TableRow>
             ))}
             {filtered.length === 0 && (
-              <TableRow><TableCell colSpan={11} className="text-center py-8 text-muted-foreground">No transactions found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">No transactions found</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
@@ -136,6 +155,20 @@ export function TransactionTable({ transactions, isLoading, onDelete, title, tot
                   <p className="font-bold text-primary">₹{Number(t.amount).toLocaleString()}</p>
                   <p className="text-xs text-muted-foreground capitalize">{t.item_type}</p>
                 </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Select value={t.status || "pending"} onValueChange={(val) => onStatusChange?.(t.id, val)}>
+                  <SelectTrigger className="h-8 w-[120px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="completed">Completed</SelectItem>
+                  </SelectContent>
+                </Select>
+                {t.status === "completed" && t.completed_date && (
+                  <span className="text-xs text-muted-foreground">{t.completed_date}</span>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-1 text-sm text-muted-foreground">
                 <span>📅 {t.date}</span>

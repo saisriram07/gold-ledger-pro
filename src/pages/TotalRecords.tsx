@@ -3,7 +3,7 @@ import { TransactionTable } from "@/components/TransactionTable";
 import { useMemo } from "react";
 
 const TotalRecords = () => {
-  const { data: transactions = [], isLoading, deleteTransaction } = useTransactions();
+  const { data: transactions = [], isLoading, deleteTransaction, updateStatus } = useTransactions();
 
   const goldAmount = useMemo(() =>
     transactions.filter((t) => t.item_type === "gold").reduce((s, t) => s + Number(t.amount), 0),
@@ -25,6 +25,7 @@ const TotalRecords = () => {
       transactions={transactions}
       isLoading={isLoading}
       onDelete={(id) => deleteTransaction.mutate(id)}
+      onStatusChange={(id, status) => updateStatus.mutate({ id, status })}
       title="Total Records"
       showSummary
       goldAmount={goldAmount}
