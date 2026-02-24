@@ -49,5 +49,18 @@ export function useTransactions(itemTypeFilter?: "gold" | "silver") {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  return { ...query, addTransaction, deleteTransaction };
+  const updateStatus = useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const completed_date = status === "completed" ? new Date().toISOString().split("T")[0] : null;
+      const { error } = await supabase.from("transactions").update({ status, completed_date }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success("Status updated");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  return { ...query, addTransaction, deleteTransaction, updateStatus };
 }

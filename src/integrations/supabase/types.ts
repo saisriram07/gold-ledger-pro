@@ -60,6 +60,7 @@ export type Database = {
         Row: {
           amount: number
           area: string
+          completed_date: string | null
           created_at: string
           customer_name: string
           date: string
@@ -71,12 +72,14 @@ export type Database = {
           reminder_date: string | null
           reminder_sent: boolean
           serial_no: string
+          status: string
           user_id: string
           weight: string
         }
         Insert: {
           amount?: number
           area: string
+          completed_date?: string | null
           created_at?: string
           customer_name: string
           date: string
@@ -88,12 +91,14 @@ export type Database = {
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no: string
+          status?: string
           user_id: string
           weight: string
         }
         Update: {
           amount?: number
           area?: string
+          completed_date?: string | null
           created_at?: string
           customer_name?: string
           date?: string
@@ -105,6 +110,7 @@ export type Database = {
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no?: string
+          status?: string
           user_id?: string
           weight?: string
         }
