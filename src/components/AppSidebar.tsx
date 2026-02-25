@@ -1,4 +1,4 @@
-import { LayoutDashboard, PlusCircle, List, Coins, CircleDollarSign, Clock } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Coins, CircleDollarSign, Clock, Gem } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
