@@ -1,33 +1,73 @@
 import { useTransactions } from "@/hooks/useTransactions";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare } from "lucide-react";
-import { useMemo } from "react";
-import { differenceInMonths } from "date-fns";
+import { useMemo, useState } from "react";
+import { differenceInMonths, differenceInYears } from "date-fns";
 import { toast } from "sonner";
+
+type TimeFilter = "3m" | "1y" | "2y" | "3y" | "5y+";
+
+const filterLabels: Record<TimeFilter, string> = {
+  "3m": "3+ Months",
+  "1y": "1+ Year",
+  "2y": "2+ Years",
+  "3y": "3+ Years",
+  "5y+": "5+ Years",
+};
 
 const Reminders = () => {
   const { data: transactions = [], isLoading } = useTransactions();
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("3m");
 
   const eligibleTransactions = useMemo(() => {
     const now = new Date();
     return transactions
-      .filter((t) => differenceInMonths(now, new Date(t.date)) >= 3)
-      .map((t) => ({
-        ...t,
-        monthsCompleted: differenceInMonths(now, new Date(t.date)),
-      }))
+      .filter((t) => {
+        const months = differenceInMonths(now, new Date(t.date));
+        switch (timeFilter) {
+          case "3m": return months >= 3;
+          case "1y": return months >= 12;
+          case "2y": return months >= 24;
+          case "3y": return months >= 36;
+          case "5y+": return months >= 60;
+        }
+      })
+      .map((t) => {
+        const months = differenceInMonths(now, new Date(t.date));
+        const years = differenceInYears(now, new Date(t.date));
+        return {
+          ...t,
+          monthsCompleted: months,
+          displayTime: years >= 1 ? `${years}y ${months % 12}m` : `${months}m`,
+        };
+      })
       .sort((a, b) => b.monthsCompleted - a.monthsCompleted);
-  }, [transactions]);
+  }, [transactions, timeFilter]);
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
   return (
     <div className="space-y-4">
-      <h1 className="text-2xl font-bold text-primary">3-Month Reminders</h1>
-      <p className="text-sm text-muted-foreground">Transactions older than 3 months that may need follow-up.</p>
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <h1 className="text-2xl font-bold text-primary">Reminders</h1>
+        <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>
+          <SelectTrigger className="w-[150px]">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(filterLabels) as TimeFilter[]).map((k) => (
+              <SelectItem key={k} value={k}>{filterLabels[k]}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <p className="text-sm text-muted-foreground">
+        Showing {eligibleTransactions.length} transactions older than {filterLabels[timeFilter].toLowerCase()}.
+      </p>
 
       {/* Desktop */}
       <div className="hidden md:block rounded-lg border overflow-auto max-h-[65vh]">
@@ -38,7 +78,7 @@ const Reminders = () => {
               <TableHead>Phone</TableHead>
               <TableHead className="text-right">Amount</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead>Months</TableHead>
+              <TableHead>Age</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Action</TableHead>
             </TableRow>
@@ -50,7 +90,7 @@ const Reminders = () => {
                 <TableCell>{t.phone}</TableCell>
                 <TableCell className="text-right">₹{Number(t.amount).toLocaleString()}</TableCell>
                 <TableCell>{t.date}</TableCell>
-                <TableCell>{t.monthsCompleted}</TableCell>
+                <TableCell>{t.displayTime}</TableCell>
                 <TableCell>
                   <Badge variant={t.reminder_sent ? "secondary" : "destructive"}>
                     {t.reminder_sent ? "Sent" : "Pending"}
@@ -89,7 +129,7 @@ const Reminders = () => {
               </div>
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>📅 {t.date}</span>
-                <span>{t.monthsCompleted} months ago</span>
+                <span>{t.displayTime} ago</span>
               </div>
               <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => toast.info("WhatsApp integration coming in Phase 2")}>
                 <MessageSquare className="h-4 w-4" /> Send WhatsApp

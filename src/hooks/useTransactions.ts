@@ -50,9 +50,9 @@ export function useTransactions(itemTypeFilter?: "gold" | "silver") {
   });
 
   const updateStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      const completed_date = status === "completed" ? new Date().toISOString().split("T")[0] : null;
-      const { error } = await supabase.from("transactions").update({ status, completed_date }).eq("id", id);
+    mutationFn: async ({ id, status, completed_date }: { id: string; status: string; completed_date?: string | null }) => {
+      const date = status === "completed" ? (completed_date || new Date().toISOString().split("T")[0]) : null;
+      const { error } = await supabase.from("transactions").update({ status, completed_date: date }).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {

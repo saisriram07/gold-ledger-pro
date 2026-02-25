@@ -25,7 +25,7 @@ const TotalRecords = () => {
       transactions={transactions}
       isLoading={isLoading}
       onDelete={(id) => deleteTransaction.mutate(id)}
-      onStatusChange={(id, status) => updateStatus.mutate({ id, status })}
+      onStatusChange={(id, status, date) => updateStatus.mutate({ id, status, completed_date: date })}
       title="Total Records"
       showSummary
       goldAmount={goldAmount}
