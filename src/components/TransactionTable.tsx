@@ -1,13 +1,17 @@
 import { useState } from "react";
+import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Calendar } from "@/components/ui/calendar";
 import { Trash2, Search, Download } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { exportTransactionsPdf } from "@/lib/pdfExport";
 import type { Tables } from "@/integrations/supabase/types";
+import { cn } from "@/lib/utils";
 
 type Transaction = Tables<"transactions">;
 
@@ -15,7 +19,7 @@ interface Props {
   transactions: Transaction[];
   isLoading: boolean;
   onDelete: (id: string) => void;
-  onStatusChange?: (id: string, status: string) => void;
+  onStatusChange?: (id: string, status: string, completed_date?: string | null) => void;
   title: string;
   totalLabel?: string;
   totalAmount?: number;
@@ -23,10 +27,14 @@ interface Props {
   goldAmount?: number;
   silverAmount?: number;
   combinationAmount?: number;
+  totalGrams?: string;
 }
 
-export function TransactionTable({ transactions, isLoading, onDelete, onStatusChange, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount }: Props) {
+export function TransactionTable({ transactions, isLoading, onDelete, onStatusChange, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount, totalGrams }: Props) {
   const [search, setSearch] = useState("");
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
   const filtered = transactions.filter((t) => {
     const q = search.toLowerCase();
@@ -34,6 +42,25 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
   });
 
   const overallTotal = filtered.reduce((s, t) => s + Number(t.amount), 0);
+
+  const handleStatusChange = (id: string, val: string) => {
+    if (val === "completed") {
+      setPendingStatusId(id);
+      setSelectedDate(new Date());
+      setDatePickerOpen(true);
+    } else {
+      onStatusChange?.(id, val, null);
+    }
+  };
+
+  const confirmCompletedDate = () => {
+    if (pendingStatusId && selectedDate) {
+      const dateStr = format(selectedDate, "yyyy-MM-dd");
+      onStatusChange?.(pendingStatusId, "completed", dateStr);
+    }
+    setDatePickerOpen(false);
+    setPendingStatusId(null);
+  };
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
@@ -57,13 +84,40 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
       )}
 
       {totalLabel && !showSummary && (
-        <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">{totalLabel}</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-primary">₹{(totalAmount ?? overallTotal).toLocaleString()}</p></CardContent></Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">{totalLabel}</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold text-primary">₹{(totalAmount ?? overallTotal).toLocaleString()}</p></CardContent></Card>
+          {totalGrams && (
+            <Card><CardHeader className="pb-1"><CardTitle className="text-xs text-muted-foreground">Total Weight</CardTitle></CardHeader><CardContent><p className="text-2xl font-bold">{totalGrams}</p></CardContent></Card>
+          )}
+        </div>
       )}
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
         <Input placeholder="Search by serial, name, phone, area, type..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
+
+      {/* Date picker dialog */}
+      <Dialog open={datePickerOpen} onOpenChange={setDatePickerOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Completion Date</DialogTitle>
+          </DialogHeader>
+          <div className="flex justify-center">
+            <Calendar
+              mode="single"
+              selected={selectedDate}
+              onSelect={setSelectedDate}
+              initialFocus
+              className={cn("p-3 pointer-events-auto")}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDatePickerOpen(false)}>Cancel</Button>
+            <Button onClick={confirmCompletedDate} disabled={!selectedDate}>Confirm</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Desktop table */}
       <div className="hidden md:block rounded-lg border overflow-auto max-h-[60vh]">
@@ -99,7 +153,7 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
                 <TableCell className="text-right font-medium">₹{Number(t.amount).toLocaleString()}</TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
-                    <Select value={t.status || "pending"} onValueChange={(val) => onStatusChange?.(t.id, val)}>
+                    <Select value={t.status || "pending"} onValueChange={(val) => handleStatusChange(t.id, val)}>
                       <SelectTrigger className="h-8 w-[120px] text-xs">
                         <SelectValue />
                       </SelectTrigger>
@@ -157,7 +211,7 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <Select value={t.status || "pending"} onValueChange={(val) => onStatusChange?.(t.id, val)}>
+                <Select value={t.status || "pending"} onValueChange={(val) => handleStatusChange(t.id, val)}>
                   <SelectTrigger className="h-8 w-[120px] text-xs">
                     <SelectValue />
                   </SelectTrigger>

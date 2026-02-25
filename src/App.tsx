@@ -14,8 +14,8 @@ import NewTransaction from "@/pages/NewTransaction";
 import TotalRecords from "@/pages/TotalRecords";
 import GoldRecords from "@/pages/GoldRecords";
 import SilverRecords from "@/pages/SilverRecords";
+import CombinationRecords from "@/pages/CombinationRecords";
 import Reminders from "@/pages/Reminders";
-import AdminPanel from "@/pages/AdminPanel";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient();
