@@ -18,7 +18,8 @@ const menuItems = [
   { title: "Total Records", url: "/records", icon: List },
   { title: "Gold Records", url: "/gold-records", icon: Coins },
   { title: "Silver Records", url: "/silver-records", icon: CircleDollarSign },
-  { title: "3-Month Reminders", url: "/reminders", icon: Clock },
+  { title: "Combination Records", url: "/combination-records", icon: Gem },
+  { title: "Reminders", url: "/reminders", icon: Clock },
 ];
 
 const adminItems = [

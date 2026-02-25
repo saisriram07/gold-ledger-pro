@@ -23,11 +23,13 @@ export function exportTransactionsPdf(transactions: Transaction[], title: string
     t.item_name,
     t.weight,
     `₹${Number(t.amount).toLocaleString()}`,
+    (t.status || "pending").charAt(0).toUpperCase() + (t.status || "pending").slice(1),
+    t.completed_date || "-",
   ]);
 
   autoTable(doc, {
     startY: 34,
-    head: [["Date", "Serial", "Customer", "Father", "Phone", "Area", "Type", "Item", "Weight", "Amount"]],
+    head: [["Date", "Serial", "Customer", "Father", "Phone", "Area", "Type", "Item", "Weight", "Amount", "Status", "Completed"]],
     body: rows,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [183, 142, 58] },
