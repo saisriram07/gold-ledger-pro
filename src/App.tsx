@@ -54,6 +54,7 @@ const AppRoutes = () => (
     <Route path="/records" element={<ProtectedRoute><TotalRecords /></ProtectedRoute>} />
     <Route path="/gold-records" element={<ProtectedRoute><GoldRecords /></ProtectedRoute>} />
     <Route path="/silver-records" element={<ProtectedRoute><SilverRecords /></ProtectedRoute>} />
+    <Route path="/combination-records" element={<ProtectedRoute><CombinationRecords /></ProtectedRoute>} />
     <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
     <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
     <Route path="*" element={<NotFound />} />
