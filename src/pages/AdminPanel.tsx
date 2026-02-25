@@ -17,7 +17,15 @@ const AdminPanel = () => {
     queryFn: async () => {
       const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+      // Also fetch auth emails for any profiles missing email
+      const { data: { users } = { users: [] } } = await supabase.auth.admin.listUsers?.() || {};
+      return data.map((p) => {
+        if (!p.email && users) {
+          const authUser = (users as any[])?.find((u: any) => u.id === p.user_id);
+          if (authUser) return { ...p, email: authUser.email };
+        }
+        return p;
+      });
     },
     enabled: isAdmin,
   });
