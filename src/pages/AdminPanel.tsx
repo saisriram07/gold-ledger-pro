@@ -4,9 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 
 const AdminPanel = () => {
   const { isAdmin } = useAuth();
@@ -34,6 +36,21 @@ const AdminPanel = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
+  const deleteUser = useMutation({
+    mutationFn: async (userId: string) => {
+      const { data, error } = await supabase.functions.invoke("delete-user", {
+        body: { user_id: userId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["admin-shops"] });
+      toast.success("User deleted successfully");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
   if (!isAdmin) return <Navigate to="/" replace />;
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
@@ -56,6 +73,7 @@ const AdminPanel = () => {
                   <TableHead>Address</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Action</TableHead>
+                  <TableHead>Delete</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -76,6 +94,32 @@ const AdminPanel = () => {
                       <Button size="sm" variant="outline" onClick={() => toggleShop.mutate({ userId: shop.user_id, disabled: !shop.is_disabled })}>
                         {shop.is_disabled ? "Enable" : "Disable"}
                       </Button>
+                    </TableCell>
+                    <TableCell>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive">
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Are you sure you want to delete this user?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will permanently delete <strong>{shop.shop_name}</strong> ({shop.owner_name}) and all their transactions. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteUser.mutate(shop.user_id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </TableCell>
                   </TableRow>
                 ))}

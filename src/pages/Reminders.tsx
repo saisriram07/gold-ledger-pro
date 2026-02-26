@@ -9,19 +9,19 @@ import { useMemo, useState } from "react";
 import { differenceInMonths, differenceInYears } from "date-fns";
 import { toast } from "sonner";
 
-type TimeFilter = "3m" | "1y" | "2y" | "3y" | "5y+";
+type TimeFilter = "1y" | "2y" | "3y" | "4y" | "5y+";
 
 const filterLabels: Record<TimeFilter, string> = {
-  "3m": "3+ Months",
   "1y": "1+ Year",
   "2y": "2+ Years",
   "3y": "3+ Years",
+  "4y": "4+ Years",
   "5y+": "5+ Years",
 };
 
 const Reminders = () => {
   const { data: transactions = [], isLoading } = useTransactions();
-  const [timeFilter, setTimeFilter] = useState<TimeFilter>("3m");
+  const [timeFilter, setTimeFilter] = useState<TimeFilter>("1y");
 
   const eligibleTransactions = useMemo(() => {
     const now = new Date();
@@ -29,10 +29,10 @@ const Reminders = () => {
       .filter((t) => {
         const months = differenceInMonths(now, new Date(t.date));
         switch (timeFilter) {
-          case "3m": return months >= 3;
           case "1y": return months >= 12;
           case "2y": return months >= 24;
           case "3y": return months >= 36;
+          case "4y": return months >= 48;
           case "5y+": return months >= 60;
         }
       })
