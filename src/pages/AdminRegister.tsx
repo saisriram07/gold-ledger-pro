@@ -35,33 +35,26 @@ const AdminRegister = () => {
     }
 
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email.trim(),
-      password: form.password,
-      options: { emailRedirectTo: window.location.origin },
-    });
 
-    if (error) {
-      setLoading(false);
-      toast.error(error.message);
-      return;
-    }
-
-    if (data.user) {
-      await supabase.from("profiles").insert({
-        user_id: data.user.id,
+    const { data, error } = await supabase.functions.invoke("register-user", {
+      body: {
+        email: form.email.trim(),
+        password: form.password,
         shop_name: "Admin",
         owner_name: form.ownerName.trim(),
         phone: form.phone.trim(),
-      });
-      await supabase.from("user_roles").insert({
-        user_id: data.user.id,
         role: "admin",
-      });
-    }
+      },
+    });
 
     setLoading(false);
-    toast.success("Admin registration successful! Please verify your email.");
+
+    if (error || data?.error) {
+      toast.error(data?.error || error?.message || "Registration failed");
+      return;
+    }
+
+    toast.success("Admin registration successful! You can now login.");
     navigate("/login");
   };
 
