@@ -33,38 +33,28 @@ const Register = () => {
     }
 
     setLoading(true);
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email.trim(),
-      password: form.password,
-      options: { emailRedirectTo: window.location.origin },
-    });
 
-    if (error) {
-      setLoading(false);
-      toast.error(error.message);
-      return;
-    }
-
-    if (data.user) {
-      // Create profile
-      await supabase.from("profiles").insert({
-        user_id: data.user.id,
+    // Use edge function to bypass password strength checks
+    const { data, error } = await supabase.functions.invoke("register-user", {
+      body: {
+        email: form.email.trim(),
+        password: form.password,
         shop_name: form.shopName.trim(),
         owner_name: form.ownerName.trim(),
         phone: form.phone.trim(),
         address: form.address.trim() || null,
-        email: form.email.trim(),
-        password_display: form.password,
-      });
-      // Assign user role
-      await supabase.from("user_roles").insert({
-        user_id: data.user.id,
         role: "user",
-      });
-    }
+      },
+    });
 
     setLoading(false);
-    toast.success("Registration successful! Please check your email to verify your account.");
+
+    if (error || data?.error) {
+      toast.error(data?.error || error?.message || "Registration failed");
+      return;
+    }
+
+    toast.success("Registration successful! You can now login.");
     navigate("/login");
   };
 
