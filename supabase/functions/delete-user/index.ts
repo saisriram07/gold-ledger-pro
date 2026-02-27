@@ -18,9 +18,10 @@ Deno.serve(async (req) => {
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
     // Verify caller is admin
-    const userClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_PUBLISHABLE_KEY")!, {
+    const userClient = createClient(supabaseUrl, anonKey, {
       global: { headers: { Authorization: authHeader } },
     });
     const { data: { user: caller } } = await userClient.auth.getUser();
@@ -39,12 +40,11 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "user_id required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Prevent self-deletion
     if (user_id === caller.id) {
       return new Response(JSON.stringify({ error: "Cannot delete yourself" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
-    // Delete profile and transactions first (cascading)
+    // Delete profile and transactions first
     await adminClient.from("transactions").delete().eq("user_id", user_id);
     await adminClient.from("user_roles").delete().eq("user_id", user_id);
     await adminClient.from("profiles").delete().eq("user_id", user_id);

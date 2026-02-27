@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -14,12 +15,33 @@ import { toast } from "sonner";
 
 const NewTransaction = () => {
   const { addTransaction } = useTransactions();
+  const location = useLocation();
+  const prefill = (location.state as any)?.prefill;
+
   const [date, setDate] = useState<Date>();
   const [form, setForm] = useState({
     serial_no: "", customer_name: "", father_name: "", phone: "", area: "",
     item_type: "" as "" | "gold" | "silver" | "combination",
     item_name: "", weight: "", amount: "",
   });
+
+  useEffect(() => {
+    if (prefill) {
+      setForm({
+        serial_no: prefill.serial_no || "",
+        customer_name: prefill.customer_name || "",
+        father_name: prefill.father_name || "",
+        phone: prefill.phone || "",
+        area: prefill.area || "",
+        item_type: prefill.item_type || "",
+        item_name: prefill.item_name || "",
+        weight: prefill.weight || "",
+        amount: "",
+      });
+      // Clear the state so refresh doesn't re-prefill
+      window.history.replaceState({}, document.title);
+    }
+  }, [prefill]);
 
   const update = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));

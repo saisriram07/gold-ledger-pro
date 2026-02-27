@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
-import { Trash2, Search, Download } from "lucide-react";
+import { Trash2, Search, Download, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { exportTransactionsPdf } from "@/lib/pdfExport";
 import type { Tables } from "@/integrations/supabase/types";
@@ -20,6 +20,7 @@ interface Props {
   isLoading: boolean;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: string, completed_date?: string | null) => void;
+  onDuplicate?: (tx: Omit<Transaction, "id" | "created_at" | "user_id" | "date" | "amount" | "status" | "completed_date" | "reminder_date" | "reminder_sent">) => void;
   title: string;
   totalLabel?: string;
   totalAmount?: number;
@@ -30,7 +31,7 @@ interface Props {
   totalGrams?: string;
 }
 
-export function TransactionTable({ transactions, isLoading, onDelete, onStatusChange, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount, totalGrams }: Props) {
+export function TransactionTable({ transactions, isLoading, onDelete, onStatusChange, onDuplicate, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount, totalGrams }: Props) {
   const [search, setSearch] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
@@ -60,6 +61,19 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
     }
     setDatePickerOpen(false);
     setPendingStatusId(null);
+  };
+
+  const handleDuplicate = (t: Transaction) => {
+    onDuplicate?.({
+      serial_no: t.serial_no,
+      customer_name: t.customer_name,
+      father_name: t.father_name,
+      phone: t.phone,
+      area: t.area,
+      item_type: t.item_type,
+      item_name: t.item_name,
+      weight: t.weight,
+    });
   };
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
@@ -168,23 +182,30 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
                   </div>
                 </TableCell>
                 <TableCell>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
-                        <Trash2 className="h-4 w-4" />
+                  <div className="flex items-center gap-1">
+                    {onDuplicate && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => handleDuplicate(t)}>
+                        <Plus className="h-4 w-4" />
                       </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
-                        <AlertDialogDescription>This will permanently delete this transaction. Are you sure?</AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={() => onDelete(t.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                    )}
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                          <AlertDialogDescription>This will permanently delete this transaction. Are you sure?</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => onDelete(t.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -232,23 +253,30 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
                 <span>💎 {t.item_name}</span>
                 <span>⚖️ {t.weight}</span>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-full text-destructive border-destructive/30">
-                    <Trash2 className="h-4 w-4 mr-1" /> Delete
+              <div className="flex gap-2">
+                {onDuplicate && (
+                  <Button variant="outline" size="sm" className="flex-1 text-primary border-primary/30" onClick={() => handleDuplicate(t)}>
+                    <Plus className="h-4 w-4 mr-1" /> Add Similar
                   </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
-                    <AlertDialogDescription>This will permanently delete this transaction.</AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDelete(t.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                )}
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline" size="sm" className="flex-1 text-destructive border-destructive/30">
+                      <Trash2 className="h-4 w-4 mr-1" /> Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
+                      <AlertDialogDescription>This will permanently delete this transaction.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDelete(t.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </CardContent>
           </Card>
         ))}
