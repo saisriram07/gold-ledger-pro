@@ -9,10 +9,9 @@ const SilverRecords = () => {
   const total = transactions.reduce((s, t) => s + Number(t.amount), 0);
 
   const totalGrams = useMemo(() => {
-    const grams = transactions.reduce((sum, t) => {
-      const w = parseFloat(t.weight) || 0;
-      return sum + w;
-    }, 0);
+    const grams = transactions
+      .filter((t) => t.item_type === "silver")
+      .reduce((sum, t) => sum + (parseFloat(t.weight) || 0), 0);
     return `${grams.toFixed(2)} grams`;
   }, [transactions]);
 
