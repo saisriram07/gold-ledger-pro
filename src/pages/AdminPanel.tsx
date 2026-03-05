@@ -8,18 +8,26 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Trash2, ShieldAlert } from "lucide-react";
+
+const MAIN_ADMIN_EMAIL = "ksaisriram2003@gmail.com";
 
 const AdminPanel = () => {
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const queryClient = useQueryClient();
 
   const { data: shops = [], isLoading } = useQuery({
     queryKey: ["admin-shops"],
     queryFn: async () => {
-      const { data, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
+      const { data: profiles, error } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      return data;
+
+      // Fetch roles for all users
+      const { data: roles } = await supabase.from("user_roles").select("user_id, role");
+      const roleMap = new Map<string, string>();
+      roles?.forEach((r) => roleMap.set(r.user_id, r.role));
+
+      return profiles.map((p) => ({ ...p, role: roleMap.get(p.user_id) || "user" }));
     },
     enabled: isAdmin,
   });
@@ -54,12 +62,15 @@ const AdminPanel = () => {
   if (!isAdmin) return <Navigate to="/" replace />;
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
+  // Show all users except the currently logged-in main admin
+  const filteredShops = shops.filter((s) => s.email !== MAIN_ADMIN_EMAIL);
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
 
       <Card>
-        <CardHeader><CardTitle className="text-lg text-primary">All Shops</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-lg text-primary">All Users</CardTitle></CardHeader>
         <CardContent>
           <div className="rounded-lg border overflow-auto">
             <Table>
@@ -71,13 +82,14 @@ const AdminPanel = () => {
                   <TableHead>Owner</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Address</TableHead>
+                  <TableHead>Role</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Action</TableHead>
                   <TableHead>Delete</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {shops.filter(s => s.shop_name !== "Admin").map((shop) => (
+                {filteredShops.map((shop) => (
                   <TableRow key={shop.id}>
                     <TableCell className="font-medium">{shop.shop_name}</TableCell>
                     <TableCell>{shop.email || "-"}</TableCell>
@@ -85,6 +97,12 @@ const AdminPanel = () => {
                     <TableCell>{shop.owner_name}</TableCell>
                     <TableCell>{shop.phone}</TableCell>
                     <TableCell>{shop.address || "-"}</TableCell>
+                    <TableCell>
+                      <Badge variant={shop.role === "admin" ? "default" : "outline"} className="gap-1">
+                        {shop.role === "admin" && <ShieldAlert className="h-3 w-3" />}
+                        {shop.role === "admin" ? "Admin" : "User"}
+                      </Badge>
+                    </TableCell>
                     <TableCell>
                       <Badge variant={shop.is_disabled ? "destructive" : "secondary"}>
                         {shop.is_disabled ? "Disabled" : "Active"}
@@ -106,7 +124,7 @@ const AdminPanel = () => {
                           <AlertDialogHeader>
                             <AlertDialogTitle>Are you sure you want to delete this user?</AlertDialogTitle>
                             <AlertDialogDescription>
-                              This will permanently delete <strong>{shop.shop_name}</strong> ({shop.owner_name}) and all their transactions. This action cannot be undone.
+                              This will permanently delete <strong>{shop.shop_name}</strong> ({shop.owner_name}) and all their data. This action cannot be undone.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
                           <AlertDialogFooter>
