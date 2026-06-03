@@ -56,7 +56,6 @@ Deno.serve(async (req) => {
       phone,
       address: address || null,
       email,
-      password_display: password,
     });
 
     // Assign role

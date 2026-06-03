@@ -22,7 +22,6 @@ export type Database = {
           id: string
           is_disabled: boolean
           owner_name: string
-          password_display: string | null
           phone: string
           shop_name: string
           updated_at: string
@@ -35,7 +34,6 @@ export type Database = {
           id?: string
           is_disabled?: boolean
           owner_name: string
-          password_display?: string | null
           phone: string
           shop_name: string
           updated_at?: string
@@ -48,7 +46,6 @@ export type Database = {
           id?: string
           is_disabled?: boolean
           owner_name?: string
-          password_display?: string | null
           phone?: string
           shop_name?: string
           updated_at?: string
