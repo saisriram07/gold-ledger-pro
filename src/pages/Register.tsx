@@ -59,7 +59,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <main className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 text-4xl" aria-hidden="true">🏅</div>
