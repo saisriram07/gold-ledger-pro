@@ -78,7 +78,6 @@ const AdminPanel = () => {
                 <TableRow className="bg-muted/50">
                   <TableHead>Shop Name</TableHead>
                   <TableHead>Email</TableHead>
-                  <TableHead>Password</TableHead>
                   <TableHead>Owner</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>Address</TableHead>
@@ -93,7 +92,6 @@ const AdminPanel = () => {
                   <TableRow key={shop.id}>
                     <TableCell className="font-medium">{shop.shop_name}</TableCell>
                     <TableCell>{shop.email || "-"}</TableCell>
-                    <TableCell>{shop.password_display || "-"}</TableCell>
                     <TableCell>{shop.owner_name}</TableCell>
                     <TableCell>{shop.phone}</TableCell>
                     <TableCell>{shop.address || "-"}</TableCell>
