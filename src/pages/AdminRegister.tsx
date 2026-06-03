@@ -102,7 +102,7 @@ const AdminRegister = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 
