@@ -56,8 +56,8 @@ const Login = () => {
             Don't have an account?{" "}
             <Link to="/register" className="text-primary hover:underline font-medium">Register</Link>
           </div>
-          <div className="mt-2 text-center text-sm text-muted-foreground">
-            <Link to="/admin-register" className="text-muted-foreground hover:text-primary hover:underline text-xs">Admin Registration</Link>
+          <div className="mt-2 text-center text-sm">
+            <Link to="/admin-register" className="text-primary hover:underline text-xs font-medium">Admin Registration</Link>
           </div>
         </CardContent>
       </Card>
