@@ -61,7 +61,7 @@ const Login = () => {
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 
