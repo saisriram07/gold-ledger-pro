@@ -31,7 +31,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <main className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 text-4xl" aria-hidden="true">🏅</div>
@@ -56,12 +56,12 @@ const Login = () => {
             Don't have an account?{" "}
             <Link to="/register" className="text-primary hover:underline font-medium">Register</Link>
           </div>
-          <div className="mt-2 text-center text-sm text-muted-foreground">
-            <Link to="/admin-register" className="text-muted-foreground hover:text-primary hover:underline text-xs">Admin Registration</Link>
+          <div className="mt-2 text-center text-sm">
+            <Link to="/admin-register" className="text-primary hover:underline text-xs font-medium">Admin Registration</Link>
           </div>
         </CardContent>
       </Card>
-    </div>
+    </main>
   );
 };
 
