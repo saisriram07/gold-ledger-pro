@@ -44,6 +44,7 @@ const AdminRegister = () => {
         owner_name: form.ownerName.trim(),
         phone: form.phone.trim(),
         role: "admin",
+        invite_code: form.inviteCode,
       },
     });
 
