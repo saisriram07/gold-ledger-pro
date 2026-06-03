@@ -62,8 +62,8 @@ const Register = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 text-4xl">🏅</div>
-          <CardTitle className="text-2xl font-bold text-primary">Register Your Shop</CardTitle>
+          <div className="mx-auto mb-2 text-4xl" aria-hidden="true">🏅</div>
+          <h1 className="text-2xl font-bold text-primary">Register Your Shop</h1>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-3">
