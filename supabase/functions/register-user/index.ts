@@ -5,6 +5,20 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Server-side admin invite code. Must match client gate but is authoritative.
+const ADMIN_INVITE_CODE = Deno.env.get("ADMIN_INVITE_CODE") ?? "1000";
+
+function isEmail(v: unknown): v is string {
+  return typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 255;
+}
+
+function clampStr(v: unknown, max: number): string | null {
+  if (typeof v !== "string") return null;
+  const t = v.trim();
+  if (!t || t.length > max) return null;
+  return t;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -16,61 +30,83 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const { email, password, shop_name, owner_name, phone, address, role } = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return new Response(JSON.stringify({ error: "Invalid request body" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const email = isEmail(body.email) ? (body.email as string).trim().toLowerCase() : null;
+    const password = typeof body.password === "string" ? body.password : null;
+    const shop_name = clampStr(body.shop_name, 150);
+    const owner_name = clampStr(body.owner_name, 100);
+    const phone = clampStr(body.phone, 30);
+    const address = body.address == null ? null : clampStr(body.address, 500);
+    const requestedRole = body.role === "admin" ? "admin" : "user";
+    const inviteCode = typeof body.invite_code === "string" ? body.invite_code : "";
 
     if (!email || !password || !shop_name || !owner_name || !phone) {
-      return new Response(JSON.stringify({ error: "Missing required fields" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      return new Response(JSON.stringify({ error: "Missing or invalid required fields" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (password.length < 6) {
-      return new Response(JSON.stringify({ error: "Password must be at least 6 characters" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (password.length < 6 || password.length > 200) {
+      return new Response(JSON.stringify({ error: "Password must be 6-200 characters" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Create user via admin API (bypasses password strength checks)
+    // Server-side authorization for admin role assignment.
+    if (requestedRole === "admin" && inviteCode !== ADMIN_INVITE_CODE) {
+      return new Response(JSON.stringify({ error: "Invalid admin invite code" }), {
+        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
     });
 
-    if (createError) {
-      return new Response(JSON.stringify({ error: createError.message }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (createError || !userData?.user) {
+      return new Response(JSON.stringify({ error: createError?.message ?? "Could not create user" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const userId = userData.user.id;
 
-    // Create profile
-    await supabaseAdmin.from("profiles").insert({
-      user_id: userId,
-      shop_name,
-      owner_name,
-      phone,
-      address: address || null,
-      email,
+    const { error: profileErr } = await supabaseAdmin.from("profiles").insert({
+      user_id: userId, shop_name, owner_name, phone, address, email,
     });
+    if (profileErr) {
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      return new Response(JSON.stringify({ error: "Failed to create profile" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-    // Assign role
-    await supabaseAdmin.from("user_roles").insert({
-      user_id: userId,
-      role: role || "user",
+    const { error: roleErr } = await supabaseAdmin.from("user_roles").insert({
+      user_id: userId, role: requestedRole,
     });
+    if (roleErr) {
+      await supabaseAdmin.from("profiles").delete().eq("user_id", userId);
+      await supabaseAdmin.auth.admin.deleteUser(userId);
+      return new Response(JSON.stringify({ error: "Failed to assign role" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     return new Response(JSON.stringify({ success: true, user_id: userId }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+  } catch (_err) {
+    // Do not leak internal errors to the client.
+    return new Response(JSON.stringify({ error: "Registration failed" }), {
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
