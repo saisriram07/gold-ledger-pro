@@ -24,7 +24,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   {profile.shop_name}
                 </span>
               )}
-              <Button variant="outline" size="sm" onClick={signOut} className="gap-1">
+              <Button variant="outline" size="sm" onClick={signOut} className="gap-1" aria-label="Log out">
                 <LogOut className="h-4 w-4" />
                 <span className="hidden sm:inline">Logout</span>
               </Button>

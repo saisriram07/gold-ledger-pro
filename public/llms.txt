@@ -1,0 +1,11 @@
+# Gold Finance Management
+
+> A jewellery shop ledger app for tracking gold, silver and combination transactions, customer details, item weights and payment reminders.
+
+Gold Finance Management is a web application for jewellery shops to manage daily customer transactions, weights, amounts and pending payment reminders. The main dashboard and records pages require an account.
+
+## Pages
+
+- [Home](/): Landing page that redirects signed-in users to their dashboard.
+- [Login](/login): Sign in to an existing shop account.
+- [Register](/register): Create a new shop account.

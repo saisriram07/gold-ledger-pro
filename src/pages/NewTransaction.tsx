@@ -75,7 +75,7 @@ const NewTransaction = () => {
     <div className="max-w-2xl mx-auto">
       <Card className="border-primary/20">
         <CardHeader>
-          <CardTitle className="text-xl text-primary">New Transaction</CardTitle>
+          <h1 className="text-xl font-semibold text-primary">New Transaction</h1>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">

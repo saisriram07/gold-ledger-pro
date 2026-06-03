@@ -12,3 +12,6 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://gold-keeper-safari.lovable.app/sitemap.xml
+

@@ -184,13 +184,13 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
                 <TableCell>
                   <div className="flex items-center gap-1">
                     {onDuplicate && (
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => handleDuplicate(t)}>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-primary hover:text-primary" onClick={() => handleDuplicate(t)} aria-label="Duplicate transaction">
                         <Plus className="h-4 w-4" />
                       </Button>
                     )}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" aria-label="Delete transaction">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </AlertDialogTrigger>
