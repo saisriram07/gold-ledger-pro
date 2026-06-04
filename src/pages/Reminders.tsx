@@ -1,4 +1,5 @@
 import { useTransactions } from "@/hooks/useTransactions";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -6,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare } from "lucide-react";
 import { useMemo, useState } from "react";
-import { differenceInMonths, differenceInYears } from "date-fns";
+import { differenceInMonths } from "date-fns";
 import { toast } from "sonner";
 
 type TimeFilter = "1y" | "2y" | "3y" | "4y" | "5y+";
