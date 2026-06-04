@@ -170,7 +170,7 @@ const Reminders = () => {
                 <span>📅 {t.date}</span>
                 <span>{t.displayTime} ago</span>
               </div>
-              <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => toast.info("WhatsApp integration coming in Phase 2")}>
+              <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => handleWhatsAppClick(t)}>
                 <MessageSquare className="h-4 w-4" /> Send WhatsApp
               </Button>
             </CardContent>
