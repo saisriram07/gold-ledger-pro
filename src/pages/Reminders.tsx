@@ -1,4 +1,5 @@
 import { useTransactions } from "@/hooks/useTransactions";
+import { useAuth } from "@/contexts/AuthContext";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const filterLabels: Record<TimeFilter, string> = {
 const Reminders = () => {
   const { data: transactions = [], isLoading } = useTransactions();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("1y");
+  const { profile } = useAuth();
 
   const eligibleTransactions = useMemo(() => {
     const now = new Date();
@@ -47,6 +49,43 @@ const Reminders = () => {
       })
       .sort((a, b) => b.monthsCompleted - a.monthsCompleted);
   }, [transactions, timeFilter]);
+
+  const handleWhatsAppClick = (t: typeof eligibleTransactions[number]) => {
+    const rawPhone = t.phone || "";
+    const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
+
+    let phoneNumber = digits;
+    if (digits.length === 10) {
+      phoneNumber = "91" + digits;
+    }
+
+    if (phoneNumber.length < 10) {
+      toast.error("Invalid phone number. Please check the customer phone number.");
+      return;
+    }
+
+    const shopName = profile?.shop_name || "Our Shop";
+
+    const typeMap: Record<string, string> = {
+      gold: "బంగారం",
+      silver: "వెండి",
+      combination: "కాంబినేషన్",
+    };
+
+    const years = Math.floor(t.monthsCompleted / 12);
+    const months = t.monthsCompleted % 12;
+    const ageParts: string[] = [];
+    if (years > 0) ageParts.push(`${years} Year${years > 1 ? "s" : ""}`);
+    if (months > 0) ageParts.push(`${months} Month${months > 1 ? "s" : ""}`);
+    const ageStr = ageParts.join(" ") || "Less than a month";
+
+    const message = `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు (${t.item_name} - ${t.weight} గ్రాములు) మా వద్ద నమోదు చేసి ${ageStr} అయింది.\n\nచెల్లించవలసిన మొత్తం: ₹${Number(t.amount).toLocaleString()}\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n\n${shopName}`;
+
+    const encodedMessage = encodeURIComponent(message);
+    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
@@ -97,7 +136,7 @@ const Reminders = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Button size="sm" variant="outline" className="gap-1" onClick={() => toast.info("WhatsApp integration coming in Phase 2")}>
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
                     <MessageSquare className="h-4 w-4" /> WhatsApp
                   </Button>
                 </TableCell>
@@ -131,7 +170,7 @@ const Reminders = () => {
                 <span>📅 {t.date}</span>
                 <span>{t.displayTime} ago</span>
               </div>
-              <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => toast.info("WhatsApp integration coming in Phase 2")}>
+              <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => handleWhatsAppClick(t)}>
                 <MessageSquare className="h-4 w-4" /> Send WhatsApp
               </Button>
             </CardContent>
