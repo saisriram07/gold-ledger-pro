@@ -136,7 +136,7 @@ const Reminders = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Button size="sm" variant="outline" className="gap-1" onClick={() => toast.info("WhatsApp integration coming in Phase 2")}>
+                  <Button size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
                     <MessageSquare className="h-4 w-4" /> WhatsApp
                   </Button>
                 </TableCell>
