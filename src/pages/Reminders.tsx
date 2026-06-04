@@ -23,6 +23,7 @@ const filterLabels: Record<TimeFilter, string> = {
 const Reminders = () => {
   const { data: transactions = [], isLoading } = useTransactions();
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("1y");
+  const { profile } = useAuth();
 
   const eligibleTransactions = useMemo(() => {
     const now = new Date();
