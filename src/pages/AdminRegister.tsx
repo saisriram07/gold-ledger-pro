@@ -7,8 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 
-const ADMIN_INVITE_CODE = "1000";
-
 const AdminRegister = () => {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -21,8 +19,8 @@ const AdminRegister = () => {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (form.inviteCode !== ADMIN_INVITE_CODE) {
-      toast.error("Invalid admin invite code");
+    if (!form.inviteCode.trim()) {
+      toast.error("Admin invite code is required");
       return;
     }
     if (form.password !== form.confirmPassword) {
