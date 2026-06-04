@@ -12,6 +12,40 @@ import { toast } from "sonner";
 
 type TimeFilter = "1y" | "2y" | "3y" | "4y" | "5y+";
 
+const typeMap: Record<string, string> = {
+  gold: "బంగారం",
+  silver: "వెండి",
+  combination: "కాంబినేషన్",
+};
+
+const formatReminderAge = (monthsCompleted: number) => {
+  const years = Math.floor(monthsCompleted / 12);
+  const months = monthsCompleted % 12;
+  const ageParts: string[] = [];
+
+  if (years > 0) ageParts.push(`${years} Year${years > 1 ? "s" : ""}`);
+  if (months > 0) ageParts.push(`${months} Month${months > 1 ? "s" : ""}`);
+
+  return ageParts.join(" ") || "Less than a month";
+};
+
+const normalizePhoneForWhatsApp = (rawPhone: string) => {
+  const trimmedPhone = rawPhone.trim();
+
+  if (!trimmedPhone) {
+    return { error: "Missing phone number. Please add the customer's phone number." };
+  }
+
+  const digits = trimmedPhone.replace(/\D/g, "").replace(/^0+/, "");
+  const normalizedPhone = digits.length === 10 ? `91${digits}` : digits;
+
+  if (!/^\d{10,15}$/.test(normalizedPhone)) {
+    return { error: "Invalid phone number. Please check the customer phone number." };
+  }
+
+  return { normalizedPhone };
+};
+
 const filterLabels: Record<TimeFilter, string> = {
   "1y": "1+ Year",
   "2y": "2+ Years",
@@ -51,40 +85,47 @@ const Reminders = () => {
   }, [transactions, timeFilter]);
 
   const handleWhatsAppClick = (t: typeof eligibleTransactions[number]) => {
-    const rawPhone = t.phone || "";
-    const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
+    try {
+      const shopName = profile?.shop_name?.trim() || "Our Shop";
+      const phoneResult = normalizePhoneForWhatsApp(t.phone || "");
 
-    let phoneNumber = digits;
-    if (digits.length === 10) {
-      phoneNumber = "91" + digits;
+      if (phoneResult.error) {
+        console.error("[WhatsApp Reminder] Phone validation failed:", phoneResult.error, {
+          customerName: t.customer_name,
+          rawPhone: t.phone,
+        });
+        toast.error(phoneResult.error);
+        return;
+      }
+
+      const ageStr = formatReminderAge(t.monthsCompleted);
+      const message = `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు వివరాలు:\n\n🔸 వస్తువు: ${t.item_name}\n🔸 బరువు: ${t.weight} గ్రాములు\n🔸 మొత్తం: ₹${Number(t.amount).toLocaleString("en-IN")}\n🔸 నమోదు చేసిన కాలం: ${ageStr}\n\nఈ లావాదేవీకి ${ageStr} పూర్తయింది.\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n${shopName}`;
+      const url = `https://wa.me/${phoneResult.normalizedPhone}?text=${encodeURIComponent(message)}`;
+
+      console.log("[WhatsApp Reminder] Customer Name:", t.customer_name);
+      console.log("[WhatsApp Reminder] Phone Number:", phoneResult.normalizedPhone);
+      console.log("[WhatsApp Reminder] Generated Message:", message);
+      console.log("[WhatsApp Reminder] Final WhatsApp URL:", url);
+
+      const popup = window.open("", "_blank");
+      console.log("[WhatsApp Reminder] window.open() result:", popup ? "opened" : "blocked");
+
+      if (!popup) {
+        const popupError = "Popup blocked. Please allow popups and try again.";
+        console.error("[WhatsApp Reminder]", popupError);
+        toast.error(popupError);
+        return;
+      }
+
+      popup.opener = null;
+      popup.location.href = url;
+      popup.focus?.();
+
+      console.log("[WhatsApp Reminder] WhatsApp launch initiated successfully.");
+    } catch (error) {
+      console.error("[WhatsApp Reminder] Failed to open WhatsApp:", error);
+      toast.error("Unable to open WhatsApp. Please try again.");
     }
-
-    if (phoneNumber.length < 10) {
-      toast.error("Invalid phone number. Please check the customer phone number.");
-      return;
-    }
-
-    const shopName = profile?.shop_name || "Our Shop";
-
-    const typeMap: Record<string, string> = {
-      gold: "బంగారం",
-      silver: "వెండి",
-      combination: "కాంబినేషన్",
-    };
-
-    const years = Math.floor(t.monthsCompleted / 12);
-    const months = t.monthsCompleted % 12;
-    const ageParts: string[] = [];
-    if (years > 0) ageParts.push(`${years} Year${years > 1 ? "s" : ""}`);
-    if (months > 0) ageParts.push(`${months} Month${months > 1 ? "s" : ""}`);
-    const ageStr = ageParts.join(" ") || "Less than a month";
-
-    const message = `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు (${t.item_name} - ${t.weight} గ్రాములు) మా వద్ద నమోదు చేసి ${ageStr} అయింది.\n\nచెల్లించవలసిన మొత్తం: ₹${Number(t.amount).toLocaleString()}\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n\n${shopName}`;
-
-    const encodedMessage = encodeURIComponent(message);
-    const url = `https://wa.me/${phoneNumber}?text=${encodedMessage}`;
-
-    window.open(url, "_blank", "noopener,noreferrer");
   };
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
@@ -136,7 +177,7 @@ const Reminders = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Button size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
+                  <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
                     <MessageSquare className="h-4 w-4" /> WhatsApp
                   </Button>
                 </TableCell>
@@ -170,7 +211,7 @@ const Reminders = () => {
                 <span>📅 {t.date}</span>
                 <span>{t.displayTime} ago</span>
               </div>
-              <Button size="sm" variant="outline" className="w-full gap-1" onClick={() => handleWhatsAppClick(t)}>
+              <Button type="button" size="sm" variant="outline" className="w-full gap-1" onClick={() => handleWhatsAppClick(t)}>
                 <MessageSquare className="h-4 w-4" /> Send WhatsApp
               </Button>
             </CardContent>
