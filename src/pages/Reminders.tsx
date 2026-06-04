@@ -7,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare } from "lucide-react";
 import { useMemo, useState } from "react";
-import { differenceInMonths } from "date-fns";
+import { differenceInMonths, differenceInYears } from "date-fns";
 import { toast } from "sonner";
 
 type TimeFilter = "1y" | "2y" | "3y" | "4y" | "5y+";
