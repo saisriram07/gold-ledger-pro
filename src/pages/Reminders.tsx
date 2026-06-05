@@ -9,6 +9,7 @@ import { MessageSquare } from "lucide-react";
 import { useMemo, useState } from "react";
 import { differenceInMonths, differenceInYears } from "date-fns";
 import { toast } from "sonner";
+import { Seo } from "@/components/Seo";
 
 type TimeFilter = "1y" | "2y" | "3y" | "4y" | "5y+";
 
@@ -145,6 +146,7 @@ const Reminders = () => {
 
   return (
     <div className="space-y-4">
+      <Seo title="Reminders — Gold Finance Management" description="Send Telugu WhatsApp payment reminders for pending jewellery transactions." path="/reminders" noindex />
       <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-primary">Reminders</h1>
         <Select value={timeFilter} onValueChange={(v) => setTimeFilter(v as TimeFilter)}>

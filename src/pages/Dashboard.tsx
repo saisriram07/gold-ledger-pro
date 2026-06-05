@@ -1,3 +1,4 @@
+import { Seo } from "@/components/Seo";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
@@ -42,6 +43,7 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
+      <Seo title="Dashboard — Gold Finance Management" description="Overview of jewellery transactions, monthly totals and gold vs silver distribution." path="/" noindex />
       <h1 className="text-2xl font-bold text-primary">Dashboard Overview</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
