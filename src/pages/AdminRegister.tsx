@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
 
 const AdminRegister = () => {
@@ -59,10 +60,11 @@ const AdminRegister = () => {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Seo title="Admin Registration — Gold Finance Management" description="Create an administrator account for Gold Finance Management. Requires a valid admin invite code." path="/admin-register" noindex />
       <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-2 text-4xl">🛡️</div>
-          <CardTitle className="text-2xl font-bold text-primary">Admin Registration</CardTitle>
+          <div className="mx-auto mb-2 text-4xl" aria-hidden="true">🛡️</div>
+          <h1 className="text-2xl font-bold text-primary">Admin Registration</h1>
           <p className="text-muted-foreground text-sm mt-1">Requires an invite code</p>
         </CardHeader>
         <CardContent>

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
 
 const Register = () => {
@@ -60,6 +61,7 @@ const Register = () => {
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Seo title="Register Your Shop — Gold Finance Management" description="Create a free Gold Finance Management account for your jewellery shop to track gold, silver and combination transactions." path="/register" />
       <Card className="w-full max-w-md border-primary/20">
         <CardHeader className="text-center">
           <div className="mx-auto mb-2 text-4xl" aria-hidden="true">🏅</div>

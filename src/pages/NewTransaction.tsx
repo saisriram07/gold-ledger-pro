@@ -12,6 +12,7 @@ import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Seo } from "@/components/Seo";
 
 const NewTransaction = () => {
   const { addTransaction } = useTransactions();
@@ -73,6 +74,7 @@ const NewTransaction = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
+      <Seo title="New Transaction — Gold Finance Management" description="Record a new gold, silver or combination jewellery transaction with customer and weight details." path="/new-transaction" noindex />
       <Card className="border-primary/20">
         <CardHeader>
           <h1 className="text-xl font-semibold text-primary">New Transaction</h1>

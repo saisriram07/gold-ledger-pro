@@ -1,3 +1,4 @@
+import { Seo } from "@/components/Seo";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -67,6 +68,7 @@ const AdminPanel = () => {
 
   return (
     <div className="space-y-6">
+      <Seo title="Admin Panel — Gold Finance Management" description="Administrator panel for managing shops and user accounts." path="/admin" noindex />
       <h1 className="text-2xl font-bold text-primary">Admin Panel</h1>
 
       <Card>

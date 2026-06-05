@@ -1,3 +1,4 @@
+import { Seo } from "@/components/Seo";
 import { useTransactions } from "@/hooks/useTransactions";
 import { TransactionTable } from "@/components/TransactionTable";
 import { useMemo } from "react";
@@ -16,17 +17,20 @@ const SilverRecords = () => {
   }, [transactions]);
 
   return (
-    <TransactionTable
-      transactions={transactions}
-      isLoading={isLoading}
-      onDelete={(id) => deleteTransaction.mutate(id)}
-      onStatusChange={(id, status, date) => updateStatus.mutate({ id, status, completed_date: date })}
-      onDuplicate={(tx) => navigate("/new-transaction", { state: { prefill: tx } })}
-      title="Silver Records"
-      totalLabel="Total Silver Amount"
-      totalAmount={total}
-      totalGrams={totalGrams}
-    />
+    <>
+      <Seo title="Silver Records — Gold Finance Management" description="All silver jewellery transactions with weight, amount and customer details." path="/silver-records" noindex />
+      <TransactionTable
+        transactions={transactions}
+        isLoading={isLoading}
+        onDelete={(id) => deleteTransaction.mutate(id)}
+        onStatusChange={(id, status, date) => updateStatus.mutate({ id, status, completed_date: date })}
+        onDuplicate={(tx) => navigate("/new-transaction", { state: { prefill: tx } })}
+        title="Silver Records"
+        totalLabel="Total Silver Amount"
+        totalAmount={total}
+        totalGrams={totalGrams}
+      />
+    </>
   );
 };
 
