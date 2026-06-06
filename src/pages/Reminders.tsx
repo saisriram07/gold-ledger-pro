@@ -50,7 +50,7 @@ const normalizePhoneForWhatsApp = (rawPhone: string) => {
 const openWhatsAppUrl = (url: string) => {
   console.log("[WhatsApp Reminder] Executing window.open()", { url });
 
-  const popup = window.open(url, "_blank");
+  const popup = window.open(url, "_blank", "noopener,noreferrer");
 
   if (popup) {
     popup.opener = null;
@@ -59,18 +59,7 @@ const openWhatsAppUrl = (url: string) => {
     return true;
   }
 
-  console.warn("[WhatsApp Reminder] window.open() returned null, trying anchor fallback.");
-
-  const fallbackLink = document.createElement("a");
-  fallbackLink.href = url;
-  fallbackLink.target = "_blank";
-  fallbackLink.rel = "noopener noreferrer";
-  fallbackLink.style.display = "none";
-  document.body.appendChild(fallbackLink);
-  fallbackLink.click();
-  fallbackLink.remove();
-
-  console.log("[WhatsApp Reminder] Anchor fallback executed, redirecting current tab as final fallback.");
+  console.warn("[WhatsApp Reminder] window.open() returned null, redirecting current tab as fallback.");
   window.location.assign(url);
   return false;
 };
