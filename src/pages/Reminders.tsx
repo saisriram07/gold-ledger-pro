@@ -47,6 +47,34 @@ const normalizePhoneForWhatsApp = (rawPhone: string) => {
   return { normalizedPhone };
 };
 
+const openWhatsAppUrl = (url: string) => {
+  console.log("[WhatsApp Reminder] Executing window.open()", { url });
+
+  const popup = window.open(url, "_blank");
+
+  if (popup) {
+    popup.opener = null;
+    popup.focus?.();
+    console.log("[WhatsApp Reminder] window.open() succeeded.");
+    return true;
+  }
+
+  console.warn("[WhatsApp Reminder] window.open() returned null, trying anchor fallback.");
+
+  const fallbackLink = document.createElement("a");
+  fallbackLink.href = url;
+  fallbackLink.target = "_blank";
+  fallbackLink.rel = "noopener noreferrer";
+  fallbackLink.style.display = "none";
+  document.body.appendChild(fallbackLink);
+  fallbackLink.click();
+  fallbackLink.remove();
+
+  console.log("[WhatsApp Reminder] Anchor fallback executed, redirecting current tab as final fallback.");
+  window.location.assign(url);
+  return false;
+};
+
 const filterLabels: Record<TimeFilter, string> = {
   "1y": "1+ Year",
   "2y": "2+ Years",
@@ -92,9 +120,6 @@ const Reminders = () => {
       transactionId: t.id,
     });
 
-    const popup = window.open("", "_blank", "noopener,noreferrer");
-    console.log("[WhatsApp Reminder] Initial window.open() result:", popup ? "opened" : "blocked");
-
     try {
       const shopName = profile?.shop_name?.trim() || "Our Shop";
       const phoneResult = normalizePhoneForWhatsApp(t.phone || "");
@@ -104,7 +129,6 @@ const Reminders = () => {
           customerName: t.customer_name,
           rawPhone: t.phone,
         });
-        popup?.close();
         toast.error(phoneResult.error);
         return;
       }
@@ -118,25 +142,8 @@ const Reminders = () => {
       console.log("[WhatsApp Reminder] Generated Message:", message);
       console.log("[WhatsApp Reminder] Final WhatsApp URL:", url);
 
-      if (!popup) {
-        console.warn("[WhatsApp Reminder] Popup was blocked, attempting anchor fallback.");
-        const fallbackLink = document.createElement("a");
-        fallbackLink.href = url;
-        fallbackLink.target = "_blank";
-        fallbackLink.rel = "noopener noreferrer";
-        fallbackLink.style.display = "none";
-        document.body.appendChild(fallbackLink);
-        fallbackLink.click();
-        fallbackLink.remove();
-        console.log("[WhatsApp Reminder] Anchor fallback click executed.");
-      } else {
-        popup.opener = null;
-        popup.location.href = url;
-        popup.focus?.();
-        console.log("[WhatsApp Reminder] WhatsApp launch initiated successfully.");
-      }
+      openWhatsAppUrl(url);
     } catch (error) {
-      popup?.close();
       console.error("[WhatsApp Reminder] Failed to open WhatsApp:", error);
       toast.error("Unable to open WhatsApp. Please try again.");
     }
