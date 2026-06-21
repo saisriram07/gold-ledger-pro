@@ -5,8 +5,24 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Server-side admin invite code. Must match client gate but is authoritative.
-const ADMIN_INVITE_CODE = Deno.env.get("ADMIN_INVITE_CODE") ?? "1000";
+// Server-side admin invite code. Required — no insecure fallback.
+const ADMIN_INVITE_CODE = Deno.env.get("ADMIN_INVITE_CODE");
+
+// Simple in-memory per-IP rate limiter (best-effort; resets on cold start).
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const bucket = rateBuckets.get(ip);
+  if (!bucket || bucket.resetAt < now) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (bucket.count >= RATE_LIMIT_MAX) return false;
+  bucket.count++;
+  return true;
+}
 
 function isEmail(v: unknown): v is string {
   return typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 255;
