@@ -55,6 +55,7 @@ Deno.serve(async (req) => {
 
     return new Response(JSON.stringify({ success: true }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    console.error("[delete-user] internal error:", error);
+    return new Response(JSON.stringify({ error: "Failed to delete user" }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 });

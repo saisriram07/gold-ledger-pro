@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Trash2, ShieldAlert } from "lucide-react";
 
-const MAIN_ADMIN_EMAIL = "ksaisriram2003@gmail.com";
+
 
 const AdminPanel = () => {
   const { isAdmin, user } = useAuth();
@@ -63,8 +63,8 @@ const AdminPanel = () => {
   if (!isAdmin) return <Navigate to="/" replace />;
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
-  // Show all users except the currently logged-in main admin
-  const filteredShops = shops.filter((s) => s.email !== MAIN_ADMIN_EMAIL);
+  // Hide the currently logged-in admin from the list
+  const filteredShops = shops.filter((s) => s.user_id !== user?.id);
 
   return (
     <div className="space-y-6">
