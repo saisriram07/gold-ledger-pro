@@ -5,10 +5,35 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
+// Best-effort per-IP rate limiter (in-memory; resets on cold start).
+const RATE_LIMIT_MAX = 20;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const b = rateBuckets.get(ip);
+  if (!b || b.resetAt < now) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (b.count >= RATE_LIMIT_MAX) return false;
+  b.count++;
+  return true;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
+
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || "unknown";
+  if (!checkRateLimit(ip)) {
+    console.warn("[delete-user] rate limit exceeded for ip:", ip);
+    return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
+    });
+  }
+
 
   try {
     const authHeader = req.headers.get("Authorization");
