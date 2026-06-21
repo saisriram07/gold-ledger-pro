@@ -84,10 +84,19 @@ Deno.serve(async (req) => {
     }
 
     // Server-side authorization for admin role assignment.
-    if (requestedRole === "admin" && inviteCode !== ADMIN_INVITE_CODE) {
-      return new Response(JSON.stringify({ error: "Invalid admin invite code" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (requestedRole === "admin") {
+      if (!ADMIN_INVITE_CODE) {
+        console.error("[register-user] ADMIN_INVITE_CODE secret is not configured");
+        return new Response(JSON.stringify({ error: "Admin registration is not available" }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (inviteCode !== ADMIN_INVITE_CODE) {
+        console.warn("[register-user] invalid admin invite attempt from ip:", ip);
+        return new Response(JSON.stringify({ error: "Invalid admin invite code" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({
