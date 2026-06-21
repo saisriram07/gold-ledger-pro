@@ -40,6 +40,15 @@ Deno.serve(async (req) => {
     return new Response("ok", { headers: corsHeaders });
   }
 
+  // Per-IP rate limit
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || "unknown";
+  if (!checkRateLimit(ip)) {
+    console.warn("[register-user] rate limit exceeded for ip:", ip);
+    return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
+    });
+  }
+
   try {
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
