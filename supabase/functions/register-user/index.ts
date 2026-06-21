@@ -5,8 +5,24 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Server-side admin invite code. Must match client gate but is authoritative.
-const ADMIN_INVITE_CODE = Deno.env.get("ADMIN_INVITE_CODE") ?? "1000";
+// Server-side admin invite code. Required — no insecure fallback.
+const ADMIN_INVITE_CODE = Deno.env.get("ADMIN_INVITE_CODE");
+
+// Simple in-memory per-IP rate limiter (best-effort; resets on cold start).
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 60_000;
+const rateBuckets = new Map<string, { count: number; resetAt: number }>();
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const bucket = rateBuckets.get(ip);
+  if (!bucket || bucket.resetAt < now) {
+    rateBuckets.set(ip, { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS });
+    return true;
+  }
+  if (bucket.count >= RATE_LIMIT_MAX) return false;
+  bucket.count++;
+  return true;
+}
 
 function isEmail(v: unknown): v is string {
   return typeof v === "string" && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v) && v.length <= 255;
@@ -22,6 +38,15 @@ function clampStr(v: unknown, max: number): string | null {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
+  }
+
+  // Per-IP rate limit
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || req.headers.get("cf-connecting-ip") || "unknown";
+  if (!checkRateLimit(ip)) {
+    console.warn("[register-user] rate limit exceeded for ip:", ip);
+    return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", "Retry-After": "60" },
+    });
   }
 
   try {
@@ -59,10 +84,19 @@ Deno.serve(async (req) => {
     }
 
     // Server-side authorization for admin role assignment.
-    if (requestedRole === "admin" && inviteCode !== ADMIN_INVITE_CODE) {
-      return new Response(JSON.stringify({ error: "Invalid admin invite code" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    if (requestedRole === "admin") {
+      if (!ADMIN_INVITE_CODE) {
+        console.error("[register-user] ADMIN_INVITE_CODE secret is not configured");
+        return new Response(JSON.stringify({ error: "Admin registration is not available" }), {
+          status: 503, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (inviteCode !== ADMIN_INVITE_CODE) {
+        console.warn("[register-user] invalid admin invite attempt from ip:", ip);
+        return new Response(JSON.stringify({ error: "Invalid admin invite code" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const { data: userData, error: createError } = await supabaseAdmin.auth.admin.createUser({

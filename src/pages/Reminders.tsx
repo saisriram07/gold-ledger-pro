@@ -48,18 +48,12 @@ const normalizePhoneForWhatsApp = (rawPhone: string) => {
 };
 
 const openWhatsAppUrl = (url: string) => {
-  console.log("[WhatsApp Reminder] Executing window.open()", { url });
-
   const popup = window.open(url, "_blank", "noopener,noreferrer");
-
   if (popup) {
     popup.opener = null;
     popup.focus?.();
-    console.log("[WhatsApp Reminder] window.open() succeeded.");
     return true;
   }
-
-  console.warn("[WhatsApp Reminder] window.open() returned null, redirecting current tab as fallback.");
   window.location.assign(url);
   return false;
 };
@@ -103,21 +97,11 @@ const Reminders = () => {
   }, [transactions, timeFilter]);
 
   const handleWhatsAppClick = (t: typeof eligibleTransactions[number]) => {
-    console.log("[WhatsApp Reminder] Click handler triggered", {
-      customerName: t.customer_name,
-      rawPhone: t.phone,
-      transactionId: t.id,
-    });
-
     try {
       const shopName = profile?.shop_name?.trim() || "Our Shop";
       const phoneResult = normalizePhoneForWhatsApp(t.phone || "");
 
       if (phoneResult.error) {
-        console.error("[WhatsApp Reminder] Phone validation failed:", phoneResult.error, {
-          customerName: t.customer_name,
-          rawPhone: t.phone,
-        });
         toast.error(phoneResult.error);
         return;
       }
@@ -126,14 +110,8 @@ const Reminders = () => {
       const message = `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు వివరాలు:\n\n🔸 వస్తువు: ${t.item_name}\n🔸 బరువు: ${t.weight} గ్రాములు\n🔸 మొత్తం: ₹${Number(t.amount).toLocaleString("en-IN")}\n🔸 నమోదు చేసిన కాలం: ${ageStr}\n\nఈ లావాదేవీకి ${ageStr} పూర్తయింది.\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n${shopName}`;
       const url = `https://wa.me/${phoneResult.normalizedPhone}?text=${encodeURIComponent(message)}`;
 
-      console.log("[WhatsApp Reminder] Customer Name:", t.customer_name);
-      console.log("[WhatsApp Reminder] Phone Number:", phoneResult.normalizedPhone);
-      console.log("[WhatsApp Reminder] Generated Message:", message);
-      console.log("[WhatsApp Reminder] Final WhatsApp URL:", url);
-
       openWhatsAppUrl(url);
-    } catch (error) {
-      console.error("[WhatsApp Reminder] Failed to open WhatsApp:", error);
+    } catch {
       toast.error("Unable to open WhatsApp. Please try again.");
     }
   };
