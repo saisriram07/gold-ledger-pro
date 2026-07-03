@@ -102,6 +102,7 @@ const buildReminderMessage = (t: typeof eligibleTransactions[number], shopName: 
 };
 
 const handleWhatsAppClick = (t: typeof eligibleTransactions[number], shopName: string) => {
+  try {
     const phoneResult = normalizePhoneForWhatsApp(t.phone || "");
 
     if (phoneResult.error) {
@@ -118,10 +119,31 @@ const handleWhatsAppClick = (t: typeof eligibleTransactions[number], shopName: s
   }
 };
 
-const handleSmsClick = (t: typeof eligibleTransactions[number], profile: typeof profileRef) => {
+const handleSmsClick = (t: typeof eligibleTransactions[number], shopName: string) => {
   try {
-    const shopName = profile?.shop_name?.trim() || "Our Shop";
     const rawPhone = t.phone || "";
+
+    if (!rawPhone.trim()) {
+      toast.error("Missing phone number. Please add the customer's phone number.");
+      return;
+    }
+
+    const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
+    const phoneNumber = digits.length === 10 ? `91${digits}` : digits;
+
+    if (!/^\d{10,15}$/.test(phoneNumber)) {
+      toast.error("Invalid phone number. Please check the customer phone number.");
+      return;
+    }
+
+    const message = buildReminderMessage(t, shopName);
+    const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+
+    window.location.href = url;
+  } catch {
+    toast.error("Unable to open SMS app. Please try again.");
+  }
+};
 
     if (!rawPhone.trim()) {
       toast.error("Missing phone number. Please add the customer's phone number.");
