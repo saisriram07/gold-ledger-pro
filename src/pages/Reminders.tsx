@@ -237,9 +237,14 @@ const Reminders = () => {
                 <span>📅 {t.date}</span>
                 <span>{t.displayTime} ago</span>
               </div>
-              <Button type="button" size="sm" variant="outline" className="w-full gap-1" onClick={() => handleWhatsAppClick(t)}>
-                <MessageSquare className="h-4 w-4" /> Send WhatsApp
-              </Button>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" className="flex-1 gap-1" onClick={() => handleWhatsAppClick(t)}>
+                  <MessageSquare className="h-4 w-4" /> WhatsApp
+                </Button>
+                <Button type="button" size="sm" variant="outline" className="flex-1 gap-1" onClick={() => handleSmsClick(t)}>
+                  <MessageCircle className="h-4 w-4" /> SMS
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
