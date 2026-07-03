@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, MessageCircle } from "lucide-react";
 import { useMemo, useState } from "react";
 import { differenceInMonths, differenceInYears } from "date-fns";
 import { toast } from "sonner";
@@ -96,6 +96,11 @@ const Reminders = () => {
       .sort((a, b) => b.monthsCompleted - a.monthsCompleted);
   }, [transactions, timeFilter]);
 
+  const buildReminderMessage = (t: typeof eligibleTransactions[number], shopName: string) => {
+    const ageStr = formatReminderAge(t.monthsCompleted);
+    return `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు వివరాలు:\n\n🔸 వస్తువు: ${t.item_name}\n🔸 బరువు: ${t.weight} గ్రాములు\n🔸 మొత్తం: ₹${Number(t.amount).toLocaleString("en-IN")}\n🔸 నమోదు చేసిన కాలం: ${ageStr}\n\nఈ లావాదేవీకి ${ageStr} పూర్తయింది.\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n${shopName}`;
+  };
+
   const handleWhatsAppClick = (t: typeof eligibleTransactions[number]) => {
     try {
       const shopName = profile?.shop_name?.trim() || "Our Shop";
@@ -106,8 +111,7 @@ const Reminders = () => {
         return;
       }
 
-      const ageStr = formatReminderAge(t.monthsCompleted);
-      const message = `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు వివరాలు:\n\n🔸 వస్తువు: ${t.item_name}\n🔸 బరువు: ${t.weight} గ్రాములు\n🔸 మొత్తం: ₹${Number(t.amount).toLocaleString("en-IN")}\n🔸 నమోదు చేసిన కాలం: ${ageStr}\n\nఈ లావాదేవీకి ${ageStr} పూర్తయింది.\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n${shopName}`;
+      const message = buildReminderMessage(t, shopName);
       const url = `https://wa.me/${phoneResult.normalizedPhone}?text=${encodeURIComponent(message)}`;
 
       openWhatsAppUrl(url);
@@ -115,6 +119,34 @@ const Reminders = () => {
       toast.error("Unable to open WhatsApp. Please try again.");
     }
   };
+
+  const handleSmsClick = (t: typeof eligibleTransactions[number]) => {
+    try {
+      const shopName = profile?.shop_name?.trim() || "Our Shop";
+      const rawPhone = t.phone || "";
+
+      if (!rawPhone.trim()) {
+        toast.error("Missing phone number. Please add the customer's phone number.");
+        return;
+      }
+
+      const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
+      const phoneNumber = digits.length === 10 ? `91${digits}` : digits;
+
+      if (!/^\d{10,15}$/.test(phoneNumber)) {
+        toast.error("Invalid phone number. Please check the customer phone number.");
+        return;
+      }
+
+      const message = buildReminderMessage(t, shopName);
+      const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+
+      window.location.href = url;
+    } catch {
+      toast.error("Unable to open SMS app. Please try again.");
+    }
+  };
+
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
@@ -166,9 +198,14 @@ const Reminders = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
-                    <MessageSquare className="h-4 w-4" /> WhatsApp
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
+                      <MessageSquare className="h-4 w-4" /> WhatsApp
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => handleSmsClick(t)}>
+                      <MessageCircle className="h-4 w-4" /> SMS
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
@@ -200,9 +237,14 @@ const Reminders = () => {
                 <span>📅 {t.date}</span>
                 <span>{t.displayTime} ago</span>
               </div>
-              <Button type="button" size="sm" variant="outline" className="w-full gap-1" onClick={() => handleWhatsAppClick(t)}>
-                <MessageSquare className="h-4 w-4" /> Send WhatsApp
-              </Button>
+              <div className="flex gap-2">
+                <Button type="button" size="sm" variant="outline" className="flex-1 gap-1" onClick={() => handleWhatsAppClick(t)}>
+                  <MessageSquare className="h-4 w-4" /> WhatsApp
+                </Button>
+                <Button type="button" size="sm" variant="outline" className="flex-1 gap-1" onClick={() => handleSmsClick(t)}>
+                  <MessageCircle className="h-4 w-4" /> SMS
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ))}
