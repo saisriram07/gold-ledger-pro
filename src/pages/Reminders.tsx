@@ -96,54 +96,56 @@ const Reminders = () => {
       .sort((a, b) => b.monthsCompleted - a.monthsCompleted);
   }, [transactions, timeFilter]);
 
-const buildReminderMessage = (t: typeof eligibleTransactions[number], shopName: string) => {
-  const ageStr = formatReminderAge(t.monthsCompleted);
-  return `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు వివరాలు:\n\n🔸 వస్తువు: ${t.item_name}\n🔸 బరువు: ${t.weight} గ్రాములు\n🔸 మొత్తం: ₹${Number(t.amount).toLocaleString("en-IN")}\n🔸 నమోదు చేసిన కాలం: ${ageStr}\n\nఈ లావాదేవీకి ${ageStr} పూర్తయింది.\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n${shopName}`;
-};
+  const buildReminderMessage = (t: typeof eligibleTransactions[number], shopName: string) => {
+    const ageStr = formatReminderAge(t.monthsCompleted);
+    return `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు వివరాలు:\n\n🔸 వస్తువు: ${t.item_name}\n🔸 బరువు: ${t.weight} గ్రాములు\n🔸 మొత్తం: ₹${Number(t.amount).toLocaleString("en-IN")}\n🔸 నమోదు చేసిన కాలం: ${ageStr}\n\nఈ లావాదేవీకి ${ageStr} పూర్తయింది.\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n${shopName}`;
+  };
 
-const handleWhatsAppClick = (t: typeof eligibleTransactions[number], shopName: string) => {
-  try {
-    const phoneResult = normalizePhoneForWhatsApp(t.phone || "");
+  const handleWhatsAppClick = (t: typeof eligibleTransactions[number]) => {
+    try {
+      const shopName = profile?.shop_name?.trim() || "Our Shop";
+      const phoneResult = normalizePhoneForWhatsApp(t.phone || "");
 
-    if (phoneResult.error) {
-      toast.error(phoneResult.error);
-      return;
+      if (phoneResult.error) {
+        toast.error(phoneResult.error);
+        return;
+      }
+
+      const message = buildReminderMessage(t, shopName);
+      const url = `https://wa.me/${phoneResult.normalizedPhone}?text=${encodeURIComponent(message)}`;
+
+      openWhatsAppUrl(url);
+    } catch {
+      toast.error("Unable to open WhatsApp. Please try again.");
     }
+  };
 
-    const message = buildReminderMessage(t, shopName);
-    const url = `https://wa.me/${phoneResult.normalizedPhone}?text=${encodeURIComponent(message)}`;
+  const handleSmsClick = (t: typeof eligibleTransactions[number]) => {
+    try {
+      const shopName = profile?.shop_name?.trim() || "Our Shop";
+      const rawPhone = t.phone || "";
 
-    openWhatsAppUrl(url);
-  } catch {
-    toast.error("Unable to open WhatsApp. Please try again.");
-  }
-};
+      if (!rawPhone.trim()) {
+        toast.error("Missing phone number. Please add the customer's phone number.");
+        return;
+      }
 
-const handleSmsClick = (t: typeof eligibleTransactions[number], shopName: string) => {
-  try {
-    const rawPhone = t.phone || "";
+      const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
+      const phoneNumber = digits.length === 10 ? `91${digits}` : digits;
 
-    if (!rawPhone.trim()) {
-      toast.error("Missing phone number. Please add the customer's phone number.");
-      return;
+      if (!/^\d{10,15}$/.test(phoneNumber)) {
+        toast.error("Invalid phone number. Please check the customer phone number.");
+        return;
+      }
+
+      const message = buildReminderMessage(t, shopName);
+      const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
+
+      window.location.href = url;
+    } catch {
+      toast.error("Unable to open SMS app. Please try again.");
     }
-
-    const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
-    const phoneNumber = digits.length === 10 ? `91${digits}` : digits;
-
-    if (!/^\d{10,15}$/.test(phoneNumber)) {
-      toast.error("Invalid phone number. Please check the customer phone number.");
-      return;
-    }
-
-    const message = buildReminderMessage(t, shopName);
-    const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
-
-    window.location.href = url;
-  } catch {
-    toast.error("Unable to open SMS app. Please try again.");
-  }
-};
+  };
 
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
