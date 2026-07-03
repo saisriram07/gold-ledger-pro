@@ -198,9 +198,14 @@ const Reminders = () => {
                   </Badge>
                 </TableCell>
                 <TableCell>
-                  <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
-                    <MessageSquare className="h-4 w-4" /> WhatsApp
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => handleWhatsAppClick(t)}>
+                      <MessageSquare className="h-4 w-4" /> WhatsApp
+                    </Button>
+                    <Button type="button" size="sm" variant="outline" className="gap-1" onClick={() => handleSmsClick(t)}>
+                      <MessageCircle className="h-4 w-4" /> SMS
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
