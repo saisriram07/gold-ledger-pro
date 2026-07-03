@@ -9,7 +9,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Calendar } from "@/components/ui/calendar";
 import { Trash2, Search, Download, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { exportTransactionsPdf } from "@/lib/pdfExport";
+// pdfExport pulls in jspdf + jspdf-autotable (~300KB). Lazy-load it only when
+// the user actually clicks Download so it doesn't bloat the initial bundle.
+const handlePdfExport = async (transactions: Transaction[], title: string) => {
+  const { exportTransactionsPdf } = await import("@/lib/pdfExport");
+  exportTransactionsPdf(transactions, title);
+};
 import type { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 
@@ -82,7 +87,7 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">{title}</h1>
-        <Button variant="outline" size="sm" className="gap-1" onClick={() => exportTransactionsPdf(filtered, title)}>
+        <Button variant="outline" size="sm" className="gap-1" onClick={() => handlePdfExport(filtered, title)}>
           <Download className="h-4 w-4" /> PDF
         </Button>
       </div>
