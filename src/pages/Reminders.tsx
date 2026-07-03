@@ -145,27 +145,6 @@ const handleSmsClick = (t: typeof eligibleTransactions[number], shopName: string
   }
 };
 
-    if (!rawPhone.trim()) {
-      toast.error("Missing phone number. Please add the customer's phone number.");
-      return;
-    }
-
-    const digits = rawPhone.replace(/\D/g, "").replace(/^0+/, "");
-    const phoneNumber = digits.length === 10 ? `91${digits}` : digits;
-
-    if (!/^\d{10,15}$/.test(phoneNumber)) {
-      toast.error("Invalid phone number. Please check the customer phone number.");
-      return;
-    }
-
-    const message = buildReminderMessage(t, shopName);
-    const url = `sms:${phoneNumber}?body=${encodeURIComponent(message)}`;
-
-    window.location.href = url;
-  } catch {
-    toast.error("Unable to open SMS app. Please try again.");
-  }
-};
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
