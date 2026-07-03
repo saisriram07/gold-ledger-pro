@@ -101,9 +101,7 @@ const buildReminderMessage = (t: typeof eligibleTransactions[number], shopName: 
   return `నమస్కారం ${t.customer_name} గారు,\n\n${shopName} నుండి మీకు గుర్తు చేస్తున్నాము.\n\nమీ ${typeMap[t.item_type] || t.item_type} వస్తువు వివరాలు:\n\n🔸 వస్తువు: ${t.item_name}\n🔸 బరువు: ${t.weight} గ్రాములు\n🔸 మొత్తం: ₹${Number(t.amount).toLocaleString("en-IN")}\n🔸 నమోదు చేసిన కాలం: ${ageStr}\n\nఈ లావాదేవీకి ${ageStr} పూర్తయింది.\n\nదయచేసి వీలైనంత త్వరగా చెల్లింపు పూర్తి చేయండి.\n\nధన్యవాదాలు,\n${shopName}`;
 };
 
-const handleWhatsAppClick = (t: typeof eligibleTransactions[number], profile: typeof profileRef) => {
-  try {
-    const shopName = profile?.shop_name?.trim() || "Our Shop";
+const handleWhatsAppClick = (t: typeof eligibleTransactions[number], shopName: string) => {
     const phoneResult = normalizePhoneForWhatsApp(t.phone || "");
 
     if (phoneResult.error) {
