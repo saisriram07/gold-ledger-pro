@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -36,18 +36,31 @@ interface Props {
   totalGrams?: string;
 }
 
-export function TransactionTable({ transactions, isLoading, onDelete, onStatusChange, onDuplicate, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount, totalGrams }: Props) {
+function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChange, onDuplicate, title, totalLabel, totalAmount, showSummary, goldAmount, silverAmount, combinationAmount, totalGrams }: Props) {
   const [search, setSearch] = useState("");
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
 
-  const filtered = transactions.filter((t) => {
-    const q = search.toLowerCase();
-    return !q || t.serial_no.toLowerCase().includes(q) || t.customer_name.toLowerCase().includes(q) || t.phone.includes(q) || t.area.toLowerCase().includes(q) || t.item_type.includes(q);
-  });
+  // Memoize filtering and totals so re-renders that don't touch `transactions`
+  // or `search` (e.g. dialog open/close) skip the O(n) work entirely.
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return transactions;
+    return transactions.filter(
+      (t) =>
+        t.serial_no.toLowerCase().includes(q) ||
+        t.customer_name.toLowerCase().includes(q) ||
+        t.phone.includes(q) ||
+        t.area.toLowerCase().includes(q) ||
+        t.item_type.includes(q),
+    );
+  }, [transactions, search]);
 
-  const overallTotal = filtered.reduce((s, t) => s + Number(t.amount), 0);
+  const overallTotal = useMemo(
+    () => filtered.reduce((s, t) => s + Number(t.amount), 0),
+    [filtered],
+  );
 
   const handleStatusChange = (id: string, val: string) => {
     if (val === "completed") {
@@ -290,3 +303,7 @@ export function TransactionTable({ transactions, isLoading, onDelete, onStatusCh
     </div>
   );
 }
+
+// React.memo prevents parent re-renders (route changes, query refetches with
+// identical data) from re-rendering this heavy table when props are shallow-equal.
+export const TransactionTable = memo(TransactionTableImpl);
