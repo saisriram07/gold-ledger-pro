@@ -1,11 +1,13 @@
 import { Seo } from "@/components/Seo";
 import { useTransactions } from "@/hooks/useTransactions";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { useMemo } from "react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { lazy, Suspense, useMemo } from "react";
 
-const GOLD_COLOR = "hsl(38, 70%, 45%)";
-const SILVER_COLOR = "hsl(0, 0%, 65%)";
+// Recharts (~100KB gz) is heavy and non-critical for FCP/LCP. Split it out so
+// the stat cards paint immediately and the chart chunk streams in behind a
+// fixed-height skeleton (no CLS).
+const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 
 const Dashboard = () => {
   const { data: transactions = [], isLoading } = useTransactions();
@@ -39,6 +41,11 @@ const Dashboard = () => {
     return transactions.filter((t) => t.date.startsWith(year)).reduce((s, t) => s + Number(t.amount), 0);
   }, [transactions]);
 
+  const overallTotal = useMemo(
+    () => transactions.reduce((s, t) => s + Number(t.amount), 0),
+    [transactions],
+  );
+
   if (isLoading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
 
   return (
@@ -49,41 +56,17 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Transactions</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">{transactions.length}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">This Year Total</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">₹{yearlyTotal.toLocaleString()}</p></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Overall Total</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">₹{transactions.reduce((s, t) => s + Number(t.amount), 0).toLocaleString()}</p></CardContent></Card>
+        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Overall Total</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">₹{overallTotal.toLocaleString()}</p></CardContent></Card>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader><CardTitle className="text-sm text-muted-foreground">Monthly Transactions (Last 12 Months)</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={monthlyData}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="month" fontSize={12} />
-                <YAxis fontSize={12} />
-                <Tooltip formatter={(v: number) => `₹${v.toLocaleString()}`} />
-                <Bar dataKey="amount" fill={GOLD_COLOR} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle className="text-sm text-muted-foreground">Gold vs Silver Distribution</CardTitle></CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie data={distributionData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={100} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
-                  <Cell fill={GOLD_COLOR} />
-                  <Cell fill={SILVER_COLOR} />
-                </Pie>
-                <Tooltip formatter={(v: number) => `₹${v.toLocaleString()}`} />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </div>
+      <Suspense fallback={
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Skeleton className="h-[380px] w-full" />
+          <Skeleton className="h-[380px] w-full" />
+        </div>
+      }>
+        <DashboardCharts monthlyData={monthlyData} distributionData={distributionData} />
+      </Suspense>
     </div>
   );
 };
