@@ -16,6 +16,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const AdminRegister = lazy(() => import("@/pages/AdminRegister"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const NewTransaction = lazy(() => import("@/pages/NewTransaction"));
 const TotalRecords = lazy(() => import("@/pages/TotalRecords"));
