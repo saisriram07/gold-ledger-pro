@@ -123,7 +123,14 @@ const AdminPanel = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredShops.map((shop) => (
+                {filteredShops.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                      No users found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredShops.map((shop) => (
                   <TableRow key={shop.id}>
                     <TableCell className="font-medium">{shop.shop_name}</TableCell>
                     <TableCell>{shop.email || "-"}</TableCell>
@@ -173,8 +180,10 @@ const AdminPanel = () => {
                       </AlertDialog>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
+
             </Table>
           </div>
         </CardContent>
