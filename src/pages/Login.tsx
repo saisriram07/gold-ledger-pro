@@ -49,6 +49,9 @@ const Login = () => {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" required />
+              <div className="text-right">
+                <Link to="/forgot-password" className="text-primary hover:underline text-xs font-medium">Forgot Password?</Link>
+              </div>
             </div>
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? "Signing in..." : "Login"}
