@@ -44,7 +44,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
       return new Response(JSON.stringify({ error: "Invalid request body" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -53,12 +53,12 @@ Deno.serve(async (req) => {
 
     if (!email || !password) {
       return new Response(JSON.stringify({ error: "Missing email or password" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     if (password.length < 6 || password.length > 200) {
       return new Response(JSON.stringify({ error: "Password must be 6-200 characters" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -70,9 +70,8 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (profileErr || !profile?.user_id) {
-      // Generic message to avoid account enumeration.
       return new Response(JSON.stringify({ error: "Account not found" }), {
-        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -83,9 +82,10 @@ Deno.serve(async (req) => {
     if (updateErr) {
       console.error("[reset-password] update failed:", updateErr.message);
       return new Response(JSON.stringify({ error: "Failed to update password" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
