@@ -71,7 +71,21 @@ const AdminPanel = () => {
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
   // Hide the currently logged-in admin from the list
-  const filteredShops = shops.filter((s) => s.user_id !== user?.id);
+  const baseShops = useMemo(() => shops.filter((s) => s.user_id !== user?.id), [shops, user?.id]);
+
+  const filteredShops = useMemo(() => {
+    const q = deferredSearch.trim().toLowerCase();
+    if (!q) return baseShops;
+    return baseShops.filter((s) => {
+      return (
+        (s.shop_name && s.shop_name.toLowerCase().includes(q)) ||
+        (s.email && s.email.toLowerCase().includes(q)) ||
+        (s.owner_name && s.owner_name.toLowerCase().includes(q)) ||
+        (s.phone && s.phone.toLowerCase().includes(q)) ||
+        (s.address && s.address.toLowerCase().includes(q))
+      );
+    });
+  }, [baseShops, deferredSearch]);
 
   return (
     <div className="space-y-6">
@@ -81,6 +95,18 @@ const AdminPanel = () => {
       <Card>
         <CardHeader><CardTitle className="text-lg text-primary">All Users</CardTitle></CardHeader>
         <CardContent>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by Shop Name, Email, Owner, Phone, or Address"
+              className="pl-9"
+              aria-label="Search users"
+            />
+          </div>
+
           <div className="rounded-lg border overflow-auto">
             <Table>
               <TableHeader>
