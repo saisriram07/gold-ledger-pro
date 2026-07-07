@@ -5,17 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { Trash2, ShieldAlert } from "lucide-react";
+import { Trash2, ShieldAlert, Search } from "lucide-react";
+import { useMemo, useState, useDeferredValue } from "react";
 
 
 
 const AdminPanel = () => {
   const { isAdmin, user } = useAuth();
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  // useDeferredValue keeps typing responsive even with thousands of rows
+  // by letting React interrupt the expensive filter pass.
+  const deferredSearch = useDeferredValue(search);
+
 
   const { data: shops = [], isLoading } = useQuery({
     queryKey: ["admin-shops"],
@@ -64,7 +71,21 @@ const AdminPanel = () => {
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
   // Hide the currently logged-in admin from the list
-  const filteredShops = shops.filter((s) => s.user_id !== user?.id);
+  const baseShops = useMemo(() => shops.filter((s) => s.user_id !== user?.id), [shops, user?.id]);
+
+  const filteredShops = useMemo(() => {
+    const q = deferredSearch.trim().toLowerCase();
+    if (!q) return baseShops;
+    return baseShops.filter((s) => {
+      return (
+        (s.shop_name && s.shop_name.toLowerCase().includes(q)) ||
+        (s.email && s.email.toLowerCase().includes(q)) ||
+        (s.owner_name && s.owner_name.toLowerCase().includes(q)) ||
+        (s.phone && s.phone.toLowerCase().includes(q)) ||
+        (s.address && s.address.toLowerCase().includes(q))
+      );
+    });
+  }, [baseShops, deferredSearch]);
 
   return (
     <div className="space-y-6">
@@ -74,6 +95,18 @@ const AdminPanel = () => {
       <Card>
         <CardHeader><CardTitle className="text-lg text-primary">All Users</CardTitle></CardHeader>
         <CardContent>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+            <Input
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search by Shop Name, Email, Owner, Phone, or Address"
+              className="pl-9"
+              aria-label="Search users"
+            />
+          </div>
+
           <div className="rounded-lg border overflow-auto">
             <Table>
               <TableHeader>
@@ -90,7 +123,14 @@ const AdminPanel = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredShops.map((shop) => (
+                {filteredShops.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center text-muted-foreground py-8">
+                      No users found.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  filteredShops.map((shop) => (
                   <TableRow key={shop.id}>
                     <TableCell className="font-medium">{shop.shop_name}</TableCell>
                     <TableCell>{shop.email || "-"}</TableCell>
@@ -140,8 +180,10 @@ const AdminPanel = () => {
                       </AlertDialog>
                     </TableCell>
                   </TableRow>
-                ))}
+                  ))
+                )}
               </TableBody>
+
             </Table>
           </div>
         </CardContent>
