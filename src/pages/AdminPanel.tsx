@@ -5,17 +5,24 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { Trash2, ShieldAlert } from "lucide-react";
+import { Trash2, ShieldAlert, Search } from "lucide-react";
+import { useMemo, useState, useDeferredValue } from "react";
 
 
 
 const AdminPanel = () => {
   const { isAdmin, user } = useAuth();
   const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  // useDeferredValue keeps typing responsive even with thousands of rows
+  // by letting React interrupt the expensive filter pass.
+  const deferredSearch = useDeferredValue(search);
+
 
   const { data: shops = [], isLoading } = useQuery({
     queryKey: ["admin-shops"],
