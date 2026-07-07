@@ -16,6 +16,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 const Login = lazy(() => import("@/pages/Login"));
 const Register = lazy(() => import("@/pages/Register"));
 const AdminRegister = lazy(() => import("@/pages/AdminRegister"));
+const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const NewTransaction = lazy(() => import("@/pages/NewTransaction"));
 const TotalRecords = lazy(() => import("@/pages/TotalRecords"));
@@ -89,6 +90,7 @@ const AppRoutes = () => (
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/admin-register" element={<PublicRoute><AdminRegister /></PublicRoute>} />
+      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/" element={<ProtectedRoute><AdminRedirect><Dashboard /></AdminRedirect></ProtectedRoute>} />
       <Route path="/new-transaction" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
       <Route path="/records" element={<ProtectedRoute><TotalRecords /></ProtectedRoute>} />
