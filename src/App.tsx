@@ -90,6 +90,7 @@ const AppRoutes = () => (
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/admin-register" element={<PublicRoute><AdminRegister /></PublicRoute>} />
+      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/" element={<ProtectedRoute><AdminRedirect><Dashboard /></AdminRedirect></ProtectedRoute>} />
       <Route path="/new-transaction" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
       <Route path="/records" element={<ProtectedRoute><TotalRecords /></ProtectedRoute>} />
