@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Calendar } from "@/components/ui/calendar";
 import { Trash2, Search, Download, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAllJama } from "@/hooks/useJama";
+import { summarize } from "@/lib/interest";
 // pdfExport pulls in jspdf + jspdf-autotable (~300KB). Lazy-load it only when
 // the user actually clicks Download so it doesn't bloat the initial bundle.
 const handlePdfExport = async (transactions: Transaction[], title: string) => {
