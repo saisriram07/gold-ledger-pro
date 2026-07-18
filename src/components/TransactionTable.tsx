@@ -44,6 +44,12 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const { data: allJama = [] } = useAllJama();
+  const jamaByTx = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const j of allJama) map.set(j.transaction_id, (map.get(j.transaction_id) || 0) + Number(j.amount));
+    return map;
+  }, [allJama]);
 
   // Memoize filtering and totals so re-renders that don't touch `transactions`
   // or `search` (e.g. dialog open/close) skip the O(n) work entirely.
