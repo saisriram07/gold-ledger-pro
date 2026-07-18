@@ -25,6 +25,7 @@ const SilverRecords = lazy(() => import("@/pages/SilverRecords"));
 const CombinationRecords = lazy(() => import("@/pages/CombinationRecords"));
 const Reminders = lazy(() => import("@/pages/Reminders"));
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
+const CustomerProfile = lazy(() => import("@/pages/CustomerProfile"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
 
 // Tuned defaults for production:
@@ -99,6 +100,7 @@ const AppRoutes = () => (
       <Route path="/combination-records" element={<ProtectedRoute><CombinationRecords /></ProtectedRoute>} />
       <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
+      <Route path="/customer/:id" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </Suspense>
