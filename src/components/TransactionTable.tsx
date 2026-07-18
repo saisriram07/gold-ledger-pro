@@ -25,7 +25,7 @@ interface Props {
   isLoading: boolean;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: string, completed_date?: string | null) => void;
-  onDuplicate?: (tx: Omit<Transaction, "id" | "created_at" | "user_id" | "date" | "amount" | "status" | "completed_date" | "reminder_date" | "reminder_sent">) => void;
+  onDuplicate?: (tx: Pick<Transaction, "serial_no" | "customer_name" | "father_name" | "phone" | "area" | "item_type" | "item_name" | "weight">) => void;
   title: string;
   totalLabel?: string;
   totalAmount?: number;
