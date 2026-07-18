@@ -168,30 +168,47 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
               <TableHead>Date</TableHead>
               <TableHead>Serial</TableHead>
               <TableHead>Customer</TableHead>
-              <TableHead>Father</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Area</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Item</TableHead>
               <TableHead>Weight</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Principal</TableHead>
+              <TableHead className="text-right">Rate</TableHead>
+              <TableHead className="text-right">Interest</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Jama</TableHead>
+              <TableHead className="text-right">Remaining</TableHead>
               <TableHead>Status</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((t) => (
+            {filtered.map((t) => {
+              const principal = Number(t.principal_amount ?? t.amount) || 0;
+              const rate = Number(t.interest_rate) || 0;
+              const jamaPaid = jamaByTx.get(t.id) || 0;
+              const s = summarize(principal, rate, t.date, [{ amount: jamaPaid }], t.completed_date || undefined);
+              return (
               <TableRow key={t.id}>
                 <TableCell className="whitespace-nowrap">{t.date}</TableCell>
                 <TableCell>{t.serial_no}</TableCell>
-                <TableCell>{t.customer_name}</TableCell>
-                <TableCell>{t.father_name || "-"}</TableCell>
+                <TableCell>
+                  {t.customer_id ? (
+                    <Link to={`/customer/${t.customer_id}`} className="text-primary hover:underline">{t.customer_name}</Link>
+                  ) : t.customer_name}
+                </TableCell>
                 <TableCell>{t.phone}</TableCell>
                 <TableCell>{t.area}</TableCell>
-                <TableCell className="capitalize">{t.item_type}</TableCell>
+                <TableCell className="capitalize">{t.loan_type || t.item_type}</TableCell>
                 <TableCell>{t.item_name}</TableCell>
                 <TableCell>{t.weight}</TableCell>
-                <TableCell className="text-right font-medium">₹{Number(t.amount).toLocaleString()}</TableCell>
+                <TableCell className="text-right font-medium">₹{principal.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{rate ? `${rate}%` : "-"}</TableCell>
+                <TableCell className="text-right">₹{s.interest.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-medium">₹{s.totalPayable.toLocaleString()}</TableCell>
+                <TableCell className="text-right">₹{s.jamaPaid.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-semibold text-primary">₹{s.remaining.toLocaleString()}</TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <Select value={t.status || "pending"} onValueChange={(val) => handleStatusChange(t.id, val)}>
