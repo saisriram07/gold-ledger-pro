@@ -14,6 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string | null
+          age: number | null
+          area: string | null
+          created_at: string
+          father_name: string | null
+          id: string
+          name: string
+          phone: string
+          photo_url: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          age?: number | null
+          area?: string | null
+          created_at?: string
+          father_name?: string | null
+          id?: string
+          name: string
+          phone: string
+          photo_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string | null
+          age?: number | null
+          area?: string | null
+          created_at?: string
+          father_name?: string | null
+          id?: string
+          name?: string
+          phone?: string
+          photo_url?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      jama_payments: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          notes: string | null
+          paid_date: string
+          transaction_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_date?: string
+          transaction_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          notes?: string | null
+          paid_date?: string
+          transaction_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jama_payments_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           address: string | null
@@ -59,13 +142,18 @@ export type Database = {
           area: string
           completed_date: string | null
           created_at: string
+          customer_id: string | null
           customer_name: string
           date: string
           father_name: string | null
           id: string
+          interest_rate: number | null
           item_name: string
           item_type: Database["public"]["Enums"]["item_type"]
+          loan_type: string | null
           phone: string
+          photo_url: string | null
+          principal_amount: number | null
           reminder_date: string | null
           reminder_sent: boolean
           serial_no: string
@@ -78,13 +166,18 @@ export type Database = {
           area: string
           completed_date?: string | null
           created_at?: string
+          customer_id?: string | null
           customer_name: string
           date: string
           father_name?: string | null
           id?: string
+          interest_rate?: number | null
           item_name: string
           item_type: Database["public"]["Enums"]["item_type"]
+          loan_type?: string | null
           phone: string
+          photo_url?: string | null
+          principal_amount?: number | null
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no: string
@@ -97,13 +190,18 @@ export type Database = {
           area?: string
           completed_date?: string | null
           created_at?: string
+          customer_id?: string | null
           customer_name?: string
           date?: string
           father_name?: string | null
           id?: string
+          interest_rate?: number | null
           item_name?: string
           item_type?: Database["public"]["Enums"]["item_type"]
+          loan_type?: string | null
           phone?: string
+          photo_url?: string | null
+          principal_amount?: number | null
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no?: string
@@ -111,7 +209,15 @@ export type Database = {
           user_id?: string
           weight?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "transactions_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -144,6 +250,7 @@ export type Database = {
         Returns: boolean
       }
       is_account_active: { Args: { _uid: string }; Returns: boolean }
+      next_serial_no: { Args: { _uid: string }; Returns: number }
     }
     Enums: {
       app_role: "admin" | "user"

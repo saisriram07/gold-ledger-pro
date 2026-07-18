@@ -1,4 +1,5 @@
 import { memo, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Calendar } from "@/components/ui/calendar";
 import { Trash2, Search, Download, Plus } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAllJama } from "@/hooks/useJama";
+import { summarize } from "@/lib/interest";
 // pdfExport pulls in jspdf + jspdf-autotable (~300KB). Lazy-load it only when
 // the user actually clicks Download so it doesn't bloat the initial bundle.
 const handlePdfExport = async (transactions: Transaction[], title: string) => {
@@ -25,7 +28,7 @@ interface Props {
   isLoading: boolean;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: string, completed_date?: string | null) => void;
-  onDuplicate?: (tx: Omit<Transaction, "id" | "created_at" | "user_id" | "date" | "amount" | "status" | "completed_date" | "reminder_date" | "reminder_sent">) => void;
+  onDuplicate?: (tx: Pick<Transaction, "serial_no" | "customer_name" | "father_name" | "phone" | "area" | "item_type" | "item_name" | "weight">) => void;
   title: string;
   totalLabel?: string;
   totalAmount?: number;
@@ -41,6 +44,12 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
   const [datePickerOpen, setDatePickerOpen] = useState(false);
   const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const { data: allJama = [] } = useAllJama();
+  const jamaByTx = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const j of allJama) map.set(j.transaction_id, (map.get(j.transaction_id) || 0) + Number(j.amount));
+    return map;
+  }, [allJama]);
 
   // Memoize filtering and totals so re-renders that don't touch `transactions`
   // or `search` (e.g. dialog open/close) skip the O(n) work entirely.
@@ -159,30 +168,47 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
               <TableHead>Date</TableHead>
               <TableHead>Serial</TableHead>
               <TableHead>Customer</TableHead>
-              <TableHead>Father</TableHead>
               <TableHead>Phone</TableHead>
               <TableHead>Area</TableHead>
               <TableHead>Type</TableHead>
               <TableHead>Item</TableHead>
               <TableHead>Weight</TableHead>
-              <TableHead className="text-right">Amount</TableHead>
+              <TableHead className="text-right">Principal</TableHead>
+              <TableHead className="text-right">Rate</TableHead>
+              <TableHead className="text-right">Interest</TableHead>
+              <TableHead className="text-right">Total</TableHead>
+              <TableHead className="text-right">Jama</TableHead>
+              <TableHead className="text-right">Remaining</TableHead>
               <TableHead>Status</TableHead>
               <TableHead></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((t) => (
+            {filtered.map((t) => {
+              const principal = Number(t.principal_amount ?? t.amount) || 0;
+              const rate = Number(t.interest_rate) || 0;
+              const jamaPaid = jamaByTx.get(t.id) || 0;
+              const s = summarize(principal, rate, t.date, [{ amount: jamaPaid }], t.completed_date || undefined);
+              return (
               <TableRow key={t.id}>
                 <TableCell className="whitespace-nowrap">{t.date}</TableCell>
                 <TableCell>{t.serial_no}</TableCell>
-                <TableCell>{t.customer_name}</TableCell>
-                <TableCell>{t.father_name || "-"}</TableCell>
+                <TableCell>
+                  {t.customer_id ? (
+                    <Link to={`/customer/${t.customer_id}`} className="text-primary hover:underline">{t.customer_name}</Link>
+                  ) : t.customer_name}
+                </TableCell>
                 <TableCell>{t.phone}</TableCell>
                 <TableCell>{t.area}</TableCell>
-                <TableCell className="capitalize">{t.item_type}</TableCell>
+                <TableCell className="capitalize">{t.loan_type || t.item_type}</TableCell>
                 <TableCell>{t.item_name}</TableCell>
                 <TableCell>{t.weight}</TableCell>
-                <TableCell className="text-right font-medium">₹{Number(t.amount).toLocaleString()}</TableCell>
+                <TableCell className="text-right font-medium">₹{principal.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{rate ? `${rate}%` : "-"}</TableCell>
+                <TableCell className="text-right">₹{s.interest.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-medium">₹{s.totalPayable.toLocaleString()}</TableCell>
+                <TableCell className="text-right">₹{s.jamaPaid.toLocaleString()}</TableCell>
+                <TableCell className="text-right font-semibold text-primary">₹{s.remaining.toLocaleString()}</TableCell>
                 <TableCell>
                   <div className="flex flex-col gap-1">
                     <Select value={t.status || "pending"} onValueChange={(val) => handleStatusChange(t.id, val)}>
@@ -226,9 +252,10 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
                   </div>
                 </TableCell>
               </TableRow>
-            ))}
+              );
+            })}
             {filtered.length === 0 && (
-              <TableRow><TableCell colSpan={12} className="text-center py-8 text-muted-foreground">No transactions found</TableCell></TableRow>
+              <TableRow><TableCell colSpan={16} className="text-center py-8 text-muted-foreground">No transactions found</TableCell></TableRow>
             )}
           </TableBody>
         </Table>
