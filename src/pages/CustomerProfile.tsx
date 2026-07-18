@@ -1,0 +1,183 @@
+import { useParams, Link } from "react-router-dom";
+import { useState, useMemo } from "react";
+import { useCustomer } from "@/hooks/useCustomers";
+import { useTransactions } from "@/hooks/useTransactions";
+import { useJama, useAllJama } from "@/hooks/useJama";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { CalendarIcon, ArrowLeft, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { summarize } from "@/lib/interest";
+import { Seo } from "@/components/Seo";
+import { useEffect } from "react";
+
+const CustomerProfile = () => {
+  const { id } = useParams<{ id: string }>();
+  const { data: customer, isLoading } = useCustomer(id);
+  const { data: allTx = [] } = useTransactions();
+  const { data: allJama = [] } = useAllJama();
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!customer?.photo_url) return;
+    supabase.storage.from("customer-photos").createSignedUrl(customer.photo_url, 3600).then(({ data }) => {
+      if (data?.signedUrl) setPhotoUrl(data.signedUrl);
+    });
+  }, [customer?.photo_url]);
+
+  const customerTx = useMemo(
+    () => allTx.filter((t) => t.customer_id === id).sort((a, b) => a.date.localeCompare(b.date)),
+    [allTx, id],
+  );
+
+  if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
+  if (!customer) return <div className="text-center py-8">Customer not found. <Link to="/records" className="text-primary underline">Back</Link></div>;
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-4">
+      <Seo title={`${customer.name} — Customer Profile`} description="Customer profile with loan, interest, jama history, and remaining balance." path={`/customer/${id}`} noindex />
+      <Link to="/records" className="inline-flex items-center gap-1 text-sm text-primary"><ArrowLeft className="h-4 w-4" /> Back to Records</Link>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{customer.name}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-[auto,1fr] gap-6">
+          <div>
+            {photoUrl ? (
+              <img src={photoUrl} alt={customer.name} className="h-40 w-40 object-cover rounded-lg border" />
+            ) : (
+              <div className="h-40 w-40 rounded-lg border border-dashed flex items-center justify-center text-muted-foreground text-sm">No photo</div>
+            )}
+          </div>
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div><dt className="text-muted-foreground">Father</dt><dd className="font-medium">{customer.father_name || "-"}</dd></div>
+            <div><dt className="text-muted-foreground">Phone</dt><dd className="font-medium">{customer.phone}</dd></div>
+            <div><dt className="text-muted-foreground">Area</dt><dd className="font-medium">{customer.area || "-"}</dd></div>
+            <div><dt className="text-muted-foreground">Address</dt><dd className="font-medium">{customer.address || "-"}</dd></div>
+            <div><dt className="text-muted-foreground">Age</dt><dd className="font-medium">{customer.age ?? "-"}</dd></div>
+            <div><dt className="text-muted-foreground">Status</dt><dd><Badge variant={customer.status === "active" ? "default" : "secondary"} className="capitalize">{customer.status}</Badge></dd></div>
+          </dl>
+        </CardContent>
+      </Card>
+
+      <h2 className="text-lg font-semibold pt-2">Loans & Jama History</h2>
+      {customerTx.length === 0 && <p className="text-muted-foreground text-sm">No transactions yet for this customer.</p>}
+      {customerTx.map((t) => (
+        <LoanCard key={t.id} tx={t} jama={allJama.filter((j) => j.transaction_id === t.id)} />
+      ))}
+    </div>
+  );
+};
+
+function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
+  const { addJama, deleteJama } = useJama(tx.id);
+  const [amount, setAmount] = useState("");
+  const [notes, setNotes] = useState("");
+  const [paidDate, setPaidDate] = useState<Date | undefined>(new Date());
+
+  const principal = Number(tx.principal_amount ?? tx.amount) || 0;
+  const rate = Number(tx.interest_rate) || 0;
+  const summary = useMemo(
+    () => summarize(principal, rate, tx.date, jama.map((j) => ({ amount: j.amount })), tx.completed_date || undefined),
+    [principal, rate, tx.date, tx.completed_date, jama],
+  );
+
+  const submitJama = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!amount || !paidDate) return;
+    addJama.mutate(
+      { transaction_id: tx.id, amount: parseFloat(amount), notes: notes || null, paid_date: format(paidDate, "yyyy-MM-dd") },
+      { onSuccess: () => { setAmount(""); setNotes(""); setPaidDate(new Date()); } },
+    );
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">
+            <span className="capitalize">{tx.loan_type || tx.item_type}</span> · {tx.item_name} · {tx.weight}
+          </CardTitle>
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline">Serial {tx.serial_no}</Badge>
+            <Badge variant="outline">{tx.date}</Badge>
+            <Badge variant={tx.status === "completed" ? "secondary" : "default"} className="capitalize">{tx.status}</Badge>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
+          <Stat label="Principal" value={`₹${principal.toLocaleString()}`} />
+          <Stat label="Rate" value={`${rate}%`} />
+          <Stat label="Interest" value={`₹${summary.interest.toLocaleString()}`} />
+          <Stat label="Total Payable" value={`₹${summary.totalPayable.toLocaleString()}`} />
+          <Stat label="Jama Paid" value={`₹${summary.jamaPaid.toLocaleString()}`} />
+          <Stat label="Remaining" value={`₹${summary.remaining.toLocaleString()}`} highlight />
+        </div>
+
+        <div>
+          <h3 className="text-sm font-semibold mb-2">Jama History</h3>
+          {jama.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No payments recorded.</p>
+          ) : (
+            <Table>
+              <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Notes</TableHead><TableHead></TableHead></TableRow></TableHeader>
+              <TableBody>
+                {jama.map((j) => (
+                  <TableRow key={j.id}>
+                    <TableCell>{j.paid_date}</TableCell>
+                    <TableCell>₹{Number(j.amount).toLocaleString()}</TableCell>
+                    <TableCell>{j.notes || "-"}</TableCell>
+                    <TableCell>
+                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteJama.mutate(j.id)} aria-label="Delete jama">
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </div>
+
+        <form onSubmit={submitJama} className="border-t pt-3 grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+          <div className="space-y-1">
+            <Label>Payment Date</Label>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button type="button" variant="outline" className={cn("w-full justify-start text-left font-normal", !paidDate && "text-muted-foreground")}>
+                  <CalendarIcon className="mr-2 h-4 w-4" />{paidDate ? format(paidDate, "PP") : "Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0 bg-popover z-50"><Calendar mode="single" selected={paidDate} onSelect={setPaidDate} initialFocus className="p-3 pointer-events-auto" /></PopoverContent>
+            </Popover>
+          </div>
+          <div className="space-y-1"><Label>Amount</Label><Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /></div>
+          <div className="space-y-1 md:col-span-1"><Label>Notes</Label><Textarea rows={1} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Optional" /></div>
+          <Button type="submit" disabled={addJama.isPending}>Add Jama</Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={cn("rounded-md border p-2", highlight && "bg-primary/10 border-primary/30")}>
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="font-semibold">{value}</p>
+    </div>
+  );
+}
+
+export default CustomerProfile;
