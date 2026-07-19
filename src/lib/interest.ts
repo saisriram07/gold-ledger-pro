@@ -64,3 +64,46 @@ export function summarize(
   const remaining = +(totalPayable - jamaPaid).toFixed(2);
   return { months, days, interest, totalPayable, jamaPaid, remaining };
 }
+
+// Unified summary for a transaction row. Handles Gold + Silver Combination
+// by summing per-metal interest calculated on each metal's own rate.
+export interface TransactionSummary {
+  principal: number;
+  rate: number | null;
+  interest: number;
+  totalPayable: number;
+  jamaPaid: number;
+  remaining: number;
+  isCombination: boolean;
+  gold?: { amount: number; rate: number; interest: number; weight?: string | null; itemName?: string | null };
+  silver?: { amount: number; rate: number; interest: number; weight?: string | null; itemName?: string | null };
+}
+
+export function summarizeTransaction(tx: any, jamaPaid = 0): TransactionSummary {
+  if (tx?.item_type === "combination") {
+    const goldAmount = Number(tx.gold_amount) || 0;
+    const goldRate = Number(tx.gold_rate) || 0;
+    const silverAmount = Number(tx.silver_amount) || 0;
+    const silverRate = Number(tx.silver_rate) || 0;
+    const gi = calculateInterest(goldAmount, goldRate, tx.date, tx.completed_date || undefined).interest;
+    const si = calculateInterest(silverAmount, silverRate, tx.date, tx.completed_date || undefined).interest;
+    const principal = goldAmount + silverAmount;
+    const interest = +(gi + si).toFixed(2);
+    const totalPayable = +(principal + interest).toFixed(2);
+    return {
+      principal,
+      rate: null,
+      interest,
+      totalPayable,
+      jamaPaid,
+      remaining: +(totalPayable - jamaPaid).toFixed(2),
+      isCombination: true,
+      gold: { amount: goldAmount, rate: goldRate, interest: gi, weight: tx.gold_weight, itemName: tx.gold_item_name },
+      silver: { amount: silverAmount, rate: silverRate, interest: si, weight: tx.silver_weight, itemName: tx.silver_item_name },
+    };
+  }
+  const principal = Number(tx?.principal_amount ?? tx?.amount) || 0;
+  const rate = Number(tx?.interest_rate) || 0;
+  const s = summarize(principal, rate, tx?.date, [{ amount: jamaPaid }], tx?.completed_date || undefined);
+  return { principal, rate, interest: s.interest, totalPayable: s.totalPayable, jamaPaid, remaining: s.remaining, isCombination: false };
+}
