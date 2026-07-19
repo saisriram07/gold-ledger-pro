@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTransactions } from "@/hooks/useTransactions";
-import { useCustomers, type Customer } from "@/hooks/useCustomers";
+import { useCustomers } from "@/hooks/useCustomers";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,6 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Seo } from "@/components/Seo";
-import { CustomerCombobox } from "@/components/CustomerCombobox";
 
 const GOLD_RATES = ["2", "2.5", "3"] as const;
 const SILVER_RATES = ["2", "3", "4", "5", "6"] as const;
@@ -38,13 +37,8 @@ const NewTransaction = () => {
   const [serialNo, setSerialNo] = useState<string>("");
   const [financeType, setFinanceType] = useState<FinanceType>("gold");
 
-  const [selected, setSelected] = useState<Customer | null>(null);
-  const [isNew, setIsNew] = useState(false);
   const [cust, setCust] = useState({ ...emptyCust });
-
-  // Single-metal leg (used for gold or silver)
   const [single, setSingle] = useState({ ...emptyLeg });
-  // Combination legs
   const [gold, setGold] = useState({ ...emptyLeg });
   const [silver, setSilver] = useState({ ...emptyLeg });
 
@@ -57,36 +51,25 @@ const NewTransaction = () => {
   };
 
   useEffect(() => { fetchSerial(); }, [user]);
-
   useEffect(() => { setSingle((f) => ({ ...f, rate: "" })); }, [financeType]);
 
   useEffect(() => {
     if (!prefill) return;
-    const t: FinanceType = prefill.item_type === "silver" ? "silver" : "gold";
+    const t: FinanceType = prefill.item_type === "silver" ? "silver" : prefill.item_type === "combination" ? "combination" : "gold";
     setFinanceType(t);
-    setIsNew(true);
     setCust({
       name: prefill.customer_name || "", father_name: prefill.father_name || "",
       phone: prefill.phone || "", area: prefill.area || "", address: "", age: "",
     });
-    setSingle((f) => ({ ...f, item_name: prefill.item_name || "", weight: prefill.weight || "" }));
+    if (t !== "combination") {
+      setSingle((f) => ({ ...f, item_name: prefill.item_name || "", weight: prefill.weight || "" }));
+    }
     window.history.replaceState({}, document.title);
   }, [prefill]);
-
-  const handleSelect = (c: Customer | null) => {
-    setSelected(c); setIsNew(false);
-    if (c) setCust({
-      name: c.name, father_name: c.father_name || "", phone: c.phone,
-      area: c.area || "", address: c.address || "", age: c.age ? String(c.age) : "",
-    });
-  };
-
-  const handleNew = () => { setSelected(null); setIsNew(true); setCust({ ...emptyCust }); };
 
   const resetForm = () => {
     setDate(new Date());
     setFinanceType("gold");
-    setSelected(null); setIsNew(false);
     setCust({ ...emptyCust });
     setSingle({ ...emptyLeg });
     setGold({ ...emptyLeg });
@@ -118,12 +101,15 @@ const NewTransaction = () => {
       if (err) return toast.error(err);
     }
 
-    let customerId = selected?.id ?? null;
+    // Find existing customer by phone (within this shop) or create a new one.
+    const phoneClean = cust.phone.trim();
+    const existing = customers.find((c) => c.phone === phoneClean);
+    let customerId = existing?.id ?? null;
     if (!customerId) {
       const created = await addCustomer.mutateAsync({
         name: cust.name.trim(),
         father_name: cust.father_name.trim() || null,
-        phone: cust.phone.trim(),
+        phone: phoneClean,
         area: cust.area.trim() || null,
         address: cust.address.trim() || null,
         age: cust.age ? parseInt(cust.age, 10) : null,
@@ -136,35 +122,42 @@ const NewTransaction = () => {
       customer_id: customerId,
       customer_name: cust.name.trim(),
       father_name: cust.father_name.trim() || null,
-      phone: cust.phone.trim(),
+      phone: phoneClean,
       area: cust.area.trim(),
+      serial_no: serialNo,
     };
 
     try {
       if (financeType === "combination") {
-        // Save two rows sharing the same serial so each metal keeps its own rate
-        await Promise.all([
-          addTransaction.mutateAsync({
-            ...baseFields, serial_no: serialNo,
-            item_type: "gold", loan_type: "gold",
-            item_name: gold.item_name.trim(), weight: gold.weight.trim(),
-            amount: parseFloat(gold.amount), principal_amount: parseFloat(gold.amount),
-            interest_rate: parseFloat(gold.rate),
-          }),
-          addTransaction.mutateAsync({
-            ...baseFields, serial_no: serialNo,
-            item_type: "silver", loan_type: "silver",
-            item_name: silver.item_name.trim(), weight: silver.weight.trim(),
-            amount: parseFloat(silver.amount), principal_amount: parseFloat(silver.amount),
-            interest_rate: parseFloat(silver.rate),
-          }),
-        ]);
+        const goldAmt = parseFloat(gold.amount);
+        const silverAmt = parseFloat(silver.amount);
+        await addTransaction.mutateAsync({
+          ...baseFields,
+          item_type: "combination",
+          loan_type: "combination",
+          item_name: `Gold: ${gold.item_name.trim()} + Silver: ${silver.item_name.trim()}`,
+          weight: `Gold ${gold.weight.trim()} + Silver ${silver.weight.trim()}`,
+          amount: goldAmt + silverAmt,
+          principal_amount: goldAmt + silverAmt,
+          interest_rate: null,
+          gold_item_name: gold.item_name.trim(),
+          gold_weight: gold.weight.trim(),
+          gold_amount: goldAmt,
+          gold_rate: parseFloat(gold.rate),
+          silver_item_name: silver.item_name.trim(),
+          silver_weight: silver.weight.trim(),
+          silver_amount: silverAmt,
+          silver_rate: parseFloat(silver.rate),
+        } as any);
       } else {
         await addTransaction.mutateAsync({
-          ...baseFields, serial_no: serialNo,
-          item_type: financeType, loan_type: financeType,
-          item_name: single.item_name.trim(), weight: single.weight.trim(),
-          amount: parseFloat(single.amount), principal_amount: parseFloat(single.amount),
+          ...baseFields,
+          item_type: financeType,
+          loan_type: financeType,
+          item_name: single.item_name.trim(),
+          weight: single.weight.trim(),
+          amount: parseFloat(single.amount),
+          principal_amount: parseFloat(single.amount),
           interest_rate: parseFloat(single.rate),
         });
       }
@@ -210,10 +203,13 @@ const NewTransaction = () => {
 
                 <div className="space-y-1">
                   <Label>Customer Name *</Label>
-                  <CustomerCombobox customers={customers} value={selected} onSelect={handleSelect} onNew={handleNew} />
-                  {(selected || isNew) && (
-                    <Input className="mt-2" placeholder="Customer name" value={cust.name} onChange={(e) => setCust({ ...cust, name: e.target.value })} required />
-                  )}
+                  <Input
+                    value={cust.name}
+                    onChange={(e) => setCust({ ...cust, name: e.target.value })}
+                    placeholder="Enter customer name"
+                    autoComplete="off"
+                    required
+                  />
                 </div>
 
                 <div className="space-y-1">
