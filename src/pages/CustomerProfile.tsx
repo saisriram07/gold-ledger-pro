@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, ArrowLeft, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { summarize } from "@/lib/interest";
+import { summarizeTransaction } from "@/lib/interest";
 import { Seo } from "@/components/Seo";
 import { useEffect } from "react";
 
