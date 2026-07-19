@@ -15,7 +15,7 @@ export function useTransactions(itemTypeFilter?: "gold" | "silver") {
     queryFn: async () => {
       let q = supabase.from("transactions").select("*").order("date", { ascending: true });
       if (itemTypeFilter) {
-        q = q.in("item_type", itemTypeFilter === "gold" ? ["gold", "combination"] : ["silver", "combination"]);
+        q = q.eq("item_type", itemTypeFilter);
       }
       const { data, error } = await q;
       if (error) throw error;
