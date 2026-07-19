@@ -146,6 +146,10 @@ export type Database = {
           customer_name: string
           date: string
           father_name: string | null
+          gold_amount: number | null
+          gold_item_name: string | null
+          gold_rate: number | null
+          gold_weight: string | null
           id: string
           interest_rate: number | null
           item_name: string
@@ -157,6 +161,10 @@ export type Database = {
           reminder_date: string | null
           reminder_sent: boolean
           serial_no: string
+          silver_amount: number | null
+          silver_item_name: string | null
+          silver_rate: number | null
+          silver_weight: string | null
           status: string
           user_id: string
           weight: string
@@ -170,6 +178,10 @@ export type Database = {
           customer_name: string
           date: string
           father_name?: string | null
+          gold_amount?: number | null
+          gold_item_name?: string | null
+          gold_rate?: number | null
+          gold_weight?: string | null
           id?: string
           interest_rate?: number | null
           item_name: string
@@ -181,6 +193,10 @@ export type Database = {
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no: string
+          silver_amount?: number | null
+          silver_item_name?: string | null
+          silver_rate?: number | null
+          silver_weight?: string | null
           status?: string
           user_id: string
           weight: string
@@ -194,6 +210,10 @@ export type Database = {
           customer_name?: string
           date?: string
           father_name?: string | null
+          gold_amount?: number | null
+          gold_item_name?: string | null
+          gold_rate?: number | null
+          gold_weight?: string | null
           id?: string
           interest_rate?: number | null
           item_name?: string
@@ -205,6 +225,10 @@ export type Database = {
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no?: string
+          silver_amount?: number | null
+          silver_item_name?: string | null
+          silver_rate?: number | null
+          silver_weight?: string | null
           status?: string
           user_id?: string
           weight?: string

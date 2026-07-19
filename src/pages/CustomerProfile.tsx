@@ -16,7 +16,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon, ArrowLeft, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { summarize } from "@/lib/interest";
+import { summarizeTransaction } from "@/lib/interest";
 import { Seo } from "@/components/Seo";
 import { useEffect } from "react";
 
@@ -85,12 +85,12 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
   const [notes, setNotes] = useState("");
   const [paidDate, setPaidDate] = useState<Date | undefined>(new Date());
 
-  const principal = Number(tx.principal_amount ?? tx.amount) || 0;
-  const rate = Number(tx.interest_rate) || 0;
+  const jamaPaid = jama.reduce((s, j) => s + Number(j.amount || 0), 0);
   const summary = useMemo(
-    () => summarize(principal, rate, tx.date, jama.map((j) => ({ amount: j.amount })), tx.completed_date || undefined),
-    [principal, rate, tx.date, tx.completed_date, jama],
+    () => summarizeTransaction(tx, jamaPaid),
+    [tx, jamaPaid],
   );
+  const isCombo = summary.isCombination;
 
   const submitJama = (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +106,11 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <CardTitle className="text-base">
-            <span className="capitalize">{tx.loan_type || tx.item_type}</span> · {tx.item_name} · {tx.weight}
+            {isCombo ? (
+              <>Gold + Silver Combination</>
+            ) : (
+              <><span className="capitalize">{tx.loan_type || tx.item_type}</span> · {tx.item_name} · {tx.weight}</>
+            )}
           </CardTitle>
           <div className="flex items-center gap-2 text-xs">
             <Badge variant="outline">Serial {tx.serial_no}</Badge>
@@ -116,10 +120,30 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {isCombo && (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="rounded-md border p-3 space-y-1 text-sm">
+              <p className="font-semibold text-primary">Gold Details</p>
+              <p><span className="text-muted-foreground">Item:</span> {summary.gold?.itemName || "-"}</p>
+              <p><span className="text-muted-foreground">Weight:</span> {summary.gold?.weight || "-"}</p>
+              <p><span className="text-muted-foreground">Amount:</span> ₹{(summary.gold?.amount || 0).toLocaleString()}</p>
+              <p><span className="text-muted-foreground">Rate:</span> {summary.gold?.rate}%</p>
+              <p><span className="text-muted-foreground">Interest:</span> ₹{(summary.gold?.interest || 0).toLocaleString()}</p>
+            </div>
+            <div className="rounded-md border p-3 space-y-1 text-sm">
+              <p className="font-semibold text-primary">Silver Details</p>
+              <p><span className="text-muted-foreground">Item:</span> {summary.silver?.itemName || "-"}</p>
+              <p><span className="text-muted-foreground">Weight:</span> {summary.silver?.weight || "-"}</p>
+              <p><span className="text-muted-foreground">Amount:</span> ₹{(summary.silver?.amount || 0).toLocaleString()}</p>
+              <p><span className="text-muted-foreground">Rate:</span> {summary.silver?.rate}%</p>
+              <p><span className="text-muted-foreground">Interest:</span> ₹{(summary.silver?.interest || 0).toLocaleString()}</p>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
-          <Stat label="Principal" value={`₹${principal.toLocaleString()}`} />
-          <Stat label="Rate" value={`${rate}%`} />
-          <Stat label="Interest" value={`₹${summary.interest.toLocaleString()}`} />
+          <Stat label={isCombo ? "Combined Principal" : "Principal"} value={`₹${summary.principal.toLocaleString()}`} />
+          <Stat label="Rate" value={isCombo ? `G ${summary.gold?.rate}% / S ${summary.silver?.rate}%` : `${summary.rate}%`} />
+          <Stat label={isCombo ? "Combined Interest" : "Interest"} value={`₹${summary.interest.toLocaleString()}`} />
           <Stat label="Total Payable" value={`₹${summary.totalPayable.toLocaleString()}`} />
           <Stat label="Jama Paid" value={`₹${summary.jamaPaid.toLocaleString()}`} />
           <Stat label="Remaining" value={`₹${summary.remaining.toLocaleString()}`} highlight />
