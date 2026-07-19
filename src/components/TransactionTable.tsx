@@ -185,10 +185,19 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
           </TableHeader>
           <TableBody>
             {filtered.map((t) => {
-              const principal = Number(t.principal_amount ?? t.amount) || 0;
-              const rate = Number(t.interest_rate) || 0;
               const jamaPaid = jamaByTx.get(t.id) || 0;
-              const s = summarize(principal, rate, t.date, [{ amount: jamaPaid }], t.completed_date || undefined);
+              const s = summarizeTransaction(t, jamaPaid);
+              const isCombo = s.isCombination;
+              const typeLabel = isCombo ? "Gold + Silver Combination" : (t.loan_type || t.item_type);
+              const itemLabel = isCombo
+                ? `Gold: ${(t as any).gold_item_name || "-"} · Silver: ${(t as any).silver_item_name || "-"}`
+                : t.item_name;
+              const weightLabel = isCombo
+                ? `Gold ${(t as any).gold_weight || "-"} + Silver ${(t as any).silver_weight || "-"}`
+                : t.weight;
+              const rateLabel = isCombo
+                ? `G ${(t as any).gold_rate ?? "-"}% / S ${(t as any).silver_rate ?? "-"}%`
+                : (s.rate ? `${s.rate}%` : "-");
               return (
               <TableRow key={t.id}>
                 <TableCell className="whitespace-nowrap">{t.date}</TableCell>
@@ -200,11 +209,11 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
                 </TableCell>
                 <TableCell>{t.phone}</TableCell>
                 <TableCell>{t.area}</TableCell>
-                <TableCell className="capitalize">{t.loan_type || t.item_type}</TableCell>
-                <TableCell>{t.item_name}</TableCell>
-                <TableCell>{t.weight}</TableCell>
-                <TableCell className="text-right font-medium">₹{principal.toLocaleString()}</TableCell>
-                <TableCell className="text-right">{rate ? `${rate}%` : "-"}</TableCell>
+                <TableCell className="capitalize">{typeLabel}</TableCell>
+                <TableCell>{itemLabel}</TableCell>
+                <TableCell>{weightLabel}</TableCell>
+                <TableCell className="text-right font-medium">₹{s.principal.toLocaleString()}</TableCell>
+                <TableCell className="text-right">{rateLabel}</TableCell>
                 <TableCell className="text-right">₹{s.interest.toLocaleString()}</TableCell>
                 <TableCell className="text-right font-medium">₹{s.totalPayable.toLocaleString()}</TableCell>
                 <TableCell className="text-right">₹{s.jamaPaid.toLocaleString()}</TableCell>
