@@ -245,8 +245,9 @@ const NewTransaction = () => {
               {/* RIGHT COLUMN */}
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <Label>Serial Number</Label>
-                  <Input value={serialNo} readOnly className="bg-muted font-mono" />
+                  <Label>Serial Number *</Label>
+                  <Input value={serialNo} onChange={(e) => setSerialNo(e.target.value)} placeholder="Enter serial number" required />
+
                 </div>
 
                 <div className="space-y-1">
