@@ -271,72 +271,8 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
         </Table>
       </div>
 
-      {/* Mobile cards */}
-      <div className="md:hidden space-y-3">
-        {filtered.map((t) => (
-          <Card key={t.id} className="border-primary/10">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex justify-between items-start">
-                <div>
-                  <p className="font-semibold">{t.customer_name}</p>
-                  <p className="text-xs text-muted-foreground">{t.father_name ? `S/O ${t.father_name}` : ""}</p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-primary">₹{Number(t.amount).toLocaleString()}</p>
-                  <p className="text-xs text-muted-foreground capitalize">{t.item_type}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Select value={t.status || "pending"} onValueChange={(val) => handleStatusChange(t.id, val)}>
-                  <SelectTrigger className="h-8 w-[120px] text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="pending">Pending</SelectItem>
-                    <SelectItem value="completed">Completed</SelectItem>
-                  </SelectContent>
-                </Select>
-                {t.status === "completed" && t.completed_date && (
-                  <span className="text-xs text-muted-foreground">{t.completed_date}</span>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-1 text-sm text-muted-foreground">
-                <span>📅 {t.date}</span>
-                <span>🔢 {t.serial_no}</span>
-                <span>📞 {t.phone}</span>
-                <span>📍 {t.area}</span>
-                <span>💎 {t.item_name}</span>
-                <span>⚖️ {t.weight}</span>
-              </div>
-              <div className="flex gap-2">
-                {onDuplicate && (
-                  <Button variant="outline" size="sm" className="flex-1 text-primary border-primary/30" onClick={() => handleDuplicate(t)}>
-                    <Plus className="h-4 w-4 mr-1" /> Add Similar
-                  </Button>
-                )}
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="flex-1 text-destructive border-destructive/30">
-                      <Trash2 className="h-4 w-4 mr-1" /> Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete Transaction</AlertDialogTitle>
-                      <AlertDialogDescription>This will permanently delete this transaction.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => onDelete(t.id)} className="bg-destructive text-destructive-foreground">Delete</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-        {filtered.length === 0 && <p className="text-center py-8 text-muted-foreground">No transactions found</p>}
-      </div>
+
+
     </div>
   );
 }
