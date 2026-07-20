@@ -68,7 +68,7 @@ const NewTransaction = () => {
     setSingle({ ...emptyLeg });
     setGold({ ...emptyLeg });
     setSilver({ ...emptyLeg });
-    fetchSerial();
+    setSerialNo("");
   };
 
   const validateLeg = (leg: typeof emptyLeg, label: string) => {
