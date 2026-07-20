@@ -44,14 +44,8 @@ const NewTransaction = () => {
 
   const availableRates = useMemo(() => (financeType === "silver" ? SILVER_RATES : GOLD_RATES), [financeType]);
 
-  const fetchSerial = async () => {
-    if (!user) return;
-    const { data, error } = await supabase.rpc("next_serial_no", { _uid: user.id });
-    if (!error && typeof data === "number") setSerialNo(String(data));
-  };
-
-  useEffect(() => { fetchSerial(); }, [user]);
   useEffect(() => { setSingle((f) => ({ ...f, rate: "" })); }, [financeType]);
+
 
   useEffect(() => {
     if (!prefill) return;
