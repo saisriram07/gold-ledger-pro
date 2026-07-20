@@ -160,8 +160,9 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
         </DialogContent>
       </Dialog>
 
-      {/* Desktop table */}
-      <div className="hidden md:block rounded-lg border overflow-auto max-h-[60vh]">
+      {/* Records table — horizontally scrollable on mobile */}
+      <div className="rounded-lg border overflow-auto max-h-[70vh] -mx-2 md:mx-0">
+
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
