@@ -44,14 +44,8 @@ const NewTransaction = () => {
 
   const availableRates = useMemo(() => (financeType === "silver" ? SILVER_RATES : GOLD_RATES), [financeType]);
 
-  const fetchSerial = async () => {
-    if (!user) return;
-    const { data, error } = await supabase.rpc("next_serial_no", { _uid: user.id });
-    if (!error && typeof data === "number") setSerialNo(String(data));
-  };
-
-  useEffect(() => { fetchSerial(); }, [user]);
   useEffect(() => { setSingle((f) => ({ ...f, rate: "" })); }, [financeType]);
+
 
   useEffect(() => {
     if (!prefill) return;
@@ -74,7 +68,7 @@ const NewTransaction = () => {
     setSingle({ ...emptyLeg });
     setGold({ ...emptyLeg });
     setSilver({ ...emptyLeg });
-    fetchSerial();
+    setSerialNo("");
   };
 
   const validateLeg = (leg: typeof emptyLeg, label: string) => {
@@ -88,7 +82,7 @@ const NewTransaction = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) return toast.error("Date is required");
-    if (!serialNo) return toast.error("Serial number not generated yet");
+    if (!serialNo.trim()) return toast.error("Serial number is required");
     if (!cust.name.trim()) return toast.error("Customer Name is required");
     if (!/^\d{10}$/.test(cust.phone.trim())) return toast.error("Mobile number must be exactly 10 digits");
     if (!cust.area.trim()) return toast.error("Area / Address is required");
@@ -251,8 +245,9 @@ const NewTransaction = () => {
               {/* RIGHT COLUMN */}
               <div className="space-y-4">
                 <div className="space-y-1">
-                  <Label>Serial Number</Label>
-                  <Input value={serialNo} readOnly className="bg-muted font-mono" />
+                  <Label>Serial Number *</Label>
+                  <Input value={serialNo} onChange={(e) => setSerialNo(e.target.value)} placeholder="Enter serial number" required />
+
                 </div>
 
                 <div className="space-y-1">
