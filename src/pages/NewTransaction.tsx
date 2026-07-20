@@ -82,7 +82,7 @@ const NewTransaction = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) return toast.error("Date is required");
-    if (!serialNo) return toast.error("Serial number not generated yet");
+    if (!serialNo.trim()) return toast.error("Serial number is required");
     if (!cust.name.trim()) return toast.error("Customer Name is required");
     if (!/^\d{10}$/.test(cust.phone.trim())) return toast.error("Mobile number must be exactly 10 digits");
     if (!cust.area.trim()) return toast.error("Area / Address is required");
