@@ -107,15 +107,17 @@ const AppRoutes = () => (
       <Route path="/admin-register" element={<PublicRoute><AdminRegister /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/" element={<ProtectedRoute><AdminRedirect><Dashboard /></AdminRedirect></ProtectedRoute>} />
-      <Route path="/new-transaction" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
-      <Route path="/records" element={<ProtectedRoute><TotalRecords /></ProtectedRoute>} />
-      <Route path="/gold-records" element={<ProtectedRoute><GoldRecords /></ProtectedRoute>} />
-      <Route path="/silver-records" element={<ProtectedRoute><SilverRecords /></ProtectedRoute>} />
-      <Route path="/combination-records" element={<ProtectedRoute><CombinationRecords /></ProtectedRoute>} />
-      <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
+      <Route path="/new-transaction" element={<ProtectedRoute module="new_transaction"><NewTransaction /></ProtectedRoute>} />
+      <Route path="/records" element={<ProtectedRoute module="total_records"><TotalRecords /></ProtectedRoute>} />
+      <Route path="/gold-records" element={<ProtectedRoute module="gold_records"><GoldRecords /></ProtectedRoute>} />
+      <Route path="/silver-records" element={<ProtectedRoute module="silver_records"><SilverRecords /></ProtectedRoute>} />
+      <Route path="/combination-records" element={<ProtectedRoute module="combination_records"><CombinationRecords /></ProtectedRoute>} />
+      <Route path="/reminders" element={<ProtectedRoute module="reminders"><Reminders /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute module="settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-      <Route path="/customer/:id" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
+      <Route path="/customer/:id" element={<ProtectedRoute module="customers"><CustomerProfile /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
+
     </Routes>
   </Suspense>
 );
