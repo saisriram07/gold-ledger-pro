@@ -64,13 +64,23 @@ const RouteFallback = () => (
   <div className="min-h-[40vh] flex items-center justify-center text-muted-foreground">Loading…</div>
 );
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isDisabled, isAdmin } = useAuth();
+function ProtectedRoute({ children, module }: { children: React.ReactNode; module?: ModuleKey }) {
+  const { user, loading, isDisabled, isAdmin, can } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (isDisabled && !isAdmin) return <DisabledAccountScreen />;
+  // Child (staff) logins can only open modules their parent granted.
+  if (module && !can(module)) return <AppLayout><NoAccess /></AppLayout>;
   return <AppLayout>{children}</AppLayout>;
 }
+
+const NoAccess = () => (
+  <div className="min-h-[40vh] flex flex-col items-center justify-center gap-2 text-center">
+    <h1 className="text-xl font-semibold text-primary">Access Restricted</h1>
+    <p className="text-muted-foreground text-sm">You do not have permission to view this page. Please contact your shop owner.</p>
+  </div>
+);
+
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
