@@ -21,7 +21,11 @@ const Login = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    // Staff (child) logins sign in with their username, which maps to a
+    // deterministic internal address — no lookup, no email required.
+    const identifier = email.trim();
+    const loginEmail = identifier.includes("@") ? identifier : childAuthEmail(identifier);
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
     setLoading(false);
     if (error) {
       toast.error(error.message);
@@ -30,6 +34,7 @@ const Login = () => {
       navigate("/");
     }
   };
+
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
