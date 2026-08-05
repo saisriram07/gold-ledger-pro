@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
+import { childAuthEmail } from "@/lib/permissions";
+
 
 const Login = () => {
   const navigate = useNavigate();
