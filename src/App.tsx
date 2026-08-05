@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { DisabledAccountScreen } from "@/components/DisabledAccountScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import type { ModuleKey } from "@/lib/permissions";
+
 
 // Route-level code splitting: each page ships in its own chunk so first paint
 // is bounded by the login screen only, and heavy screens (records, admin,
