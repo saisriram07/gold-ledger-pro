@@ -85,11 +85,7 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
   const [notes, setNotes] = useState("");
   const [paidDate, setPaidDate] = useState<Date | undefined>(new Date());
 
-  const jamaPaid = jama.reduce((s, j) => s + Number(j.amount || 0), 0);
-  const summary = useMemo(
-    () => summarizeTransaction(tx, jamaPaid),
-    [tx, jamaPaid],
-  );
+  const summary = useMemo(() => summarizeTransaction(tx, jama), [tx, jama]);
   const isCombo = summary.isCombination;
 
   const submitJama = (e: React.FormEvent) => {
@@ -148,6 +144,13 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
           <Stat label="Jama Paid" value={`₹${summary.jamaPaid.toLocaleString()}`} />
           <Stat label="Remaining" value={`₹${summary.remaining.toLocaleString()}`} highlight />
         </div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+          <Stat label="Remaining Principal" value={`₹${summary.remainingPrincipal.toLocaleString()}`} />
+          <Stat label="Remaining Interest" value={`₹${summary.remainingInterest.toLocaleString()}`} />
+          <Stat label="Outstanding Balance" value={`₹${summary.outstanding.toLocaleString()}`} highlight />
+          <Stat label="Last Payment Date" value={summary.lastPaymentDate || "-"} />
+          <Stat label="Next Interest From" value={summary.nextInterestDate} />
+        </div>
 
         <div>
           <h3 className="text-sm font-semibold mb-2">Jama History</h3>
@@ -155,12 +158,17 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
             <p className="text-xs text-muted-foreground">No payments recorded.</p>
           ) : (
             <Table>
-              <TableHeader><TableRow><TableHead>Date</TableHead><TableHead>Amount</TableHead><TableHead>Notes</TableHead><TableHead></TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Payment Date</TableHead><TableHead>Interest till Date</TableHead><TableHead>Jama Amount</TableHead><TableHead>Remaining Balance</TableHead><TableHead>Next Interest From</TableHead><TableHead>Notes</TableHead><TableHead></TableHead></TableRow></TableHeader>
               <TableBody>
-                {jama.map((j) => (
+                {jama.map((j) => {
+                  const p = summary.periods.find((x) => x.paidDate === j.paid_date);
+                  return (
                   <TableRow key={j.id}>
                     <TableCell>{j.paid_date}</TableCell>
+                    <TableCell>₹{(p?.interestTillDate ?? 0).toLocaleString()}</TableCell>
                     <TableCell>₹{Number(j.amount).toLocaleString()}</TableCell>
+                    <TableCell>₹{(p?.remainingBalance ?? 0).toLocaleString()}</TableCell>
+                    <TableCell>{p?.nextInterestStart || "-"}</TableCell>
                     <TableCell>{j.notes || "-"}</TableCell>
                     <TableCell>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteJama.mutate(j.id)} aria-label="Delete jama">
@@ -168,7 +176,8 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                  );
+                })}
               </TableBody>
             </Table>
           )}

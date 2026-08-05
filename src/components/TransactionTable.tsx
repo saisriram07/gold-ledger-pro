@@ -14,9 +14,13 @@ import { useAllJama } from "@/hooks/useJama";
 import { summarizeTransaction } from "@/lib/interest";
 // pdfExport pulls in jspdf + jspdf-autotable (~300KB). Lazy-load it only when
 // the user actually clicks Download so it doesn't bloat the initial bundle.
-const handlePdfExport = async (transactions: Transaction[], title: string) => {
+const handlePdfExport = async (
+  transactions: Transaction[],
+  title: string,
+  jamaByTx?: Map<string, { amount: number; paid_date: string }[]>,
+) => {
   const { exportTransactionsPdf } = await import("@/lib/pdfExport");
-  exportTransactionsPdf(transactions, title);
+  exportTransactionsPdf(transactions, title, jamaByTx);
 };
 import type { Tables } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
@@ -45,9 +49,14 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
   const [pendingStatusId, setPendingStatusId] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const { data: allJama = [] } = useAllJama();
+  // Keep full jama rows (dates matter): interest is recalculated per payment period.
   const jamaByTx = useMemo(() => {
-    const map = new Map<string, number>();
-    for (const j of allJama) map.set(j.transaction_id, (map.get(j.transaction_id) || 0) + Number(j.amount));
+    const map = new Map<string, { amount: number; paid_date: string }[]>();
+    for (const j of allJama) {
+      const list = map.get(j.transaction_id) ?? [];
+      list.push({ amount: Number(j.amount), paid_date: j.paid_date });
+      map.set(j.transaction_id, list);
+    }
     return map;
   }, [allJama]);
 
@@ -109,7 +118,7 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-primary">{title}</h1>
-        <Button variant="outline" size="sm" className="gap-1" onClick={() => handlePdfExport(filtered, title)}>
+        <Button variant="outline" size="sm" className="gap-1" onClick={() => handlePdfExport(filtered, title, jamaByTx)}>
           <Download className="h-4 w-4" /> PDF
         </Button>
       </div>
@@ -186,8 +195,7 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
           </TableHeader>
           <TableBody>
             {filtered.map((t) => {
-              const jamaPaid = jamaByTx.get(t.id) || 0;
-              const s = summarizeTransaction(t, jamaPaid);
+              const s = summarizeTransaction(t, jamaByTx.get(t.id) ?? []);
               const isCombo = s.isCombination;
               const typeLabel = isCombo ? "Gold + Silver Combination" : (t.loan_type || t.item_type);
               const itemLabel = isCombo
