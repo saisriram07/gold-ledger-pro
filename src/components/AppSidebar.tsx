@@ -1,4 +1,4 @@
-import { LayoutDashboard, PlusCircle, List, Coins, CircleDollarSign, Clock, Gem } from "lucide-react";
+import { LayoutDashboard, PlusCircle, List, Coins, CircleDollarSign, Clock, Gem, Settings } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -11,15 +11,17 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import type { ModuleKey } from "@/lib/permissions";
 
-const menuItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "New Transaction", url: "/new-transaction", icon: PlusCircle },
-  { title: "Total Records", url: "/records", icon: List },
-  { title: "Gold Records", url: "/gold-records", icon: Coins },
-  { title: "Silver Records", url: "/silver-records", icon: CircleDollarSign },
-  { title: "Combination Records", url: "/combination-records", icon: Gem },
-  { title: "Reminders", url: "/reminders", icon: Clock },
+const menuItems: { title: string; url: string; icon: typeof LayoutDashboard; module: ModuleKey }[] = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, module: "dashboard" },
+  { title: "New Transaction", url: "/new-transaction", icon: PlusCircle, module: "new_transaction" },
+  { title: "Total Records", url: "/records", icon: List, module: "total_records" },
+  { title: "Gold Records", url: "/gold-records", icon: Coins, module: "gold_records" },
+  { title: "Silver Records", url: "/silver-records", icon: CircleDollarSign, module: "silver_records" },
+  { title: "Combination Records", url: "/combination-records", icon: Gem, module: "combination_records" },
+  { title: "Reminders", url: "/reminders", icon: Clock, module: "reminders" },
+  { title: "Settings", url: "/settings", icon: Settings, module: "settings" },
 ];
 
 const adminItems = [
@@ -27,7 +29,8 @@ const adminItems = [
 ];
 
 export function AppSidebar() {
-  const { isAdmin } = useAuth();
+  const { isAdmin, can } = useAuth();
+  const visibleItems = menuItems.filter((item) => can(item.module));
 
   return (
     <Sidebar>
@@ -37,7 +40,8 @@ export function AppSidebar() {
             <SidebarGroupLabel className="text-primary font-semibold">Menu</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {menuItems.map((item) => (
+                {visibleItems.map((item) => (
+
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild>
                       <NavLink to={item.url} end className="hover:bg-accent" activeClassName="bg-accent text-primary font-medium">

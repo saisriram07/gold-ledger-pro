@@ -1,10 +1,15 @@
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import type { Tables } from "@/integrations/supabase/types";
+import { summarizeTransaction } from "@/lib/interest";
 
 type Transaction = Tables<"transactions">;
 
-export function exportTransactionsPdf(transactions: Transaction[], title: string) {
+export function exportTransactionsPdf(
+  transactions: Transaction[],
+  title: string,
+  jamaByTx?: Map<string, { amount: number; paid_date: string }[]>,
+) {
   const doc = new jsPDF({ orientation: "landscape" });
 
   doc.setFontSize(18);
@@ -23,13 +28,14 @@ export function exportTransactionsPdf(transactions: Transaction[], title: string
     t.item_name,
     t.weight,
     `₹${Number(t.amount).toLocaleString()}`,
+    `₹${summarizeTransaction(t, jamaByTx?.get(t.id) ?? []).outstanding.toLocaleString()}`,
     (t.status || "pending").charAt(0).toUpperCase() + (t.status || "pending").slice(1),
     t.completed_date || "-",
   ]);
 
   autoTable(doc, {
     startY: 34,
-    head: [["Date", "Serial", "Customer", "Father", "Phone", "Area", "Type", "Item", "Weight", "Amount", "Status", "Completed"]],
+    head: [["Date", "Serial", "Customer", "Father", "Phone", "Area", "Type", "Item", "Weight", "Amount", "Outstanding", "Status", "Completed"]],
     body: rows,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [183, 142, 58] },

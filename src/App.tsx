@@ -8,6 +8,8 @@ import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/AppLayout";
 import { DisabledAccountScreen } from "@/components/DisabledAccountScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import type { ModuleKey } from "@/lib/permissions";
+
 
 // Route-level code splitting: each page ships in its own chunk so first paint
 // is bounded by the login screen only, and heavy screens (records, admin,
@@ -25,8 +27,10 @@ const SilverRecords = lazy(() => import("@/pages/SilverRecords"));
 const CombinationRecords = lazy(() => import("@/pages/CombinationRecords"));
 const Reminders = lazy(() => import("@/pages/Reminders"));
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
+const SettingsPage = lazy(() => import("@/pages/Settings"));
 const CustomerProfile = lazy(() => import("@/pages/CustomerProfile"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+
 
 // Tuned defaults for production:
 // - staleTime 60s: cuts redundant refetches while navigating between records pages.
@@ -62,13 +66,23 @@ const RouteFallback = () => (
   <div className="min-h-[40vh] flex items-center justify-center text-muted-foreground">Loading…</div>
 );
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isDisabled, isAdmin } = useAuth();
+function ProtectedRoute({ children, module }: { children: React.ReactNode; module?: ModuleKey }) {
+  const { user, loading, isDisabled, isAdmin, can } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-muted-foreground">Loading...</div>;
   if (!user) return <Navigate to="/login" replace />;
   if (isDisabled && !isAdmin) return <DisabledAccountScreen />;
+  // Child (staff) logins can only open modules their parent granted.
+  if (module && !can(module)) return <AppLayout><NoAccess /></AppLayout>;
   return <AppLayout>{children}</AppLayout>;
 }
+
+const NoAccess = () => (
+  <div className="min-h-[40vh] flex flex-col items-center justify-center gap-2 text-center">
+    <h1 className="text-xl font-semibold text-primary">Access Restricted</h1>
+    <p className="text-muted-foreground text-sm">You do not have permission to view this page. Please contact your shop owner.</p>
+  </div>
+);
+
 
 function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -93,15 +107,17 @@ const AppRoutes = () => (
       <Route path="/admin-register" element={<PublicRoute><AdminRegister /></PublicRoute>} />
       <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
       <Route path="/" element={<ProtectedRoute><AdminRedirect><Dashboard /></AdminRedirect></ProtectedRoute>} />
-      <Route path="/new-transaction" element={<ProtectedRoute><NewTransaction /></ProtectedRoute>} />
-      <Route path="/records" element={<ProtectedRoute><TotalRecords /></ProtectedRoute>} />
-      <Route path="/gold-records" element={<ProtectedRoute><GoldRecords /></ProtectedRoute>} />
-      <Route path="/silver-records" element={<ProtectedRoute><SilverRecords /></ProtectedRoute>} />
-      <Route path="/combination-records" element={<ProtectedRoute><CombinationRecords /></ProtectedRoute>} />
-      <Route path="/reminders" element={<ProtectedRoute><Reminders /></ProtectedRoute>} />
+      <Route path="/new-transaction" element={<ProtectedRoute module="new_transaction"><NewTransaction /></ProtectedRoute>} />
+      <Route path="/records" element={<ProtectedRoute module="total_records"><TotalRecords /></ProtectedRoute>} />
+      <Route path="/gold-records" element={<ProtectedRoute module="gold_records"><GoldRecords /></ProtectedRoute>} />
+      <Route path="/silver-records" element={<ProtectedRoute module="silver_records"><SilverRecords /></ProtectedRoute>} />
+      <Route path="/combination-records" element={<ProtectedRoute module="combination_records"><CombinationRecords /></ProtectedRoute>} />
+      <Route path="/reminders" element={<ProtectedRoute module="reminders"><Reminders /></ProtectedRoute>} />
+      <Route path="/settings" element={<ProtectedRoute module="settings"><SettingsPage /></ProtectedRoute>} />
       <Route path="/admin" element={<ProtectedRoute><AdminPanel /></ProtectedRoute>} />
-      <Route path="/customer/:id" element={<ProtectedRoute><CustomerProfile /></ProtectedRoute>} />
+      <Route path="/customer/:id" element={<ProtectedRoute module="customers"><CustomerProfile /></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
+
     </Routes>
   </Suspense>
 );

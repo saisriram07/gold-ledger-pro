@@ -14,6 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
+      child_audit_logs: {
+        Row: {
+          action: string
+          child_user_id: string
+          created_at: string
+          details: Json | null
+          device: string | null
+          id: string
+          ip_address: string | null
+          module: string | null
+          parent_user_id: string
+        }
+        Insert: {
+          action: string
+          child_user_id: string
+          created_at?: string
+          details?: Json | null
+          device?: string | null
+          id?: string
+          ip_address?: string | null
+          module?: string | null
+          parent_user_id: string
+        }
+        Update: {
+          action?: string
+          child_user_id?: string
+          created_at?: string
+          details?: Json | null
+          device?: string | null
+          id?: string
+          ip_address?: string | null
+          module?: string | null
+          parent_user_id?: string
+        }
+        Relationships: []
+      }
+      child_permissions: {
+        Row: {
+          can_create: boolean
+          can_delete: boolean
+          can_edit: boolean
+          can_view: boolean
+          child_user_id: string
+          created_at: string
+          id: string
+          module: string
+          updated_at: string
+        }
+        Insert: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          child_user_id: string
+          created_at?: string
+          id?: string
+          module: string
+          updated_at?: string
+        }
+        Update: {
+          can_create?: boolean
+          can_delete?: boolean
+          can_edit?: boolean
+          can_view?: boolean
+          child_user_id?: string
+          created_at?: string
+          id?: string
+          module?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "child_permissions_child_user_id_fkey"
+            columns: ["child_user_id"]
+            isOneToOne: false
+            referencedRelation: "child_users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      child_sessions: {
+        Row: {
+          child_user_id: string
+          created_at: string
+          device: string | null
+          id: string
+          ip_address: string | null
+          login_at: string
+          logout_at: string | null
+          parent_user_id: string
+        }
+        Insert: {
+          child_user_id: string
+          created_at?: string
+          device?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string
+          logout_at?: string | null
+          parent_user_id: string
+        }
+        Update: {
+          child_user_id?: string
+          created_at?: string
+          device?: string | null
+          id?: string
+          ip_address?: string | null
+          login_at?: string
+          logout_at?: string | null
+          parent_user_id?: string
+        }
+        Relationships: []
+      }
+      child_users: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string
+          id: string
+          is_disabled: boolean
+          mobile: string
+          parent_user_id: string
+          updated_at: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name: string
+          id?: string
+          is_disabled?: boolean
+          mobile: string
+          parent_user_id: string
+          updated_at?: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string
+          id?: string
+          is_disabled?: boolean
+          mobile?: string
+          parent_user_id?: string
+          updated_at?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -266,6 +418,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      child_can: {
+        Args: { _action: string; _module: string; _uid: string }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -274,7 +430,9 @@ export type Database = {
         Returns: boolean
       }
       is_account_active: { Args: { _uid: string }; Returns: boolean }
+      is_child_user: { Args: { _uid: string }; Returns: boolean }
       next_serial_no: { Args: { _uid: string }; Returns: number }
+      parent_owner_id: { Args: { _uid: string }; Returns: string }
     }
     Enums: {
       app_role: "admin" | "user"

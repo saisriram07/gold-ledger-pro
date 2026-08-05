@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
+import { childAuthEmail } from "@/lib/permissions";
+
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,7 +23,11 @@ const Login = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
+    // Staff (child) logins sign in with their username, which maps to a
+    // deterministic internal address — no lookup, no email required.
+    const identifier = email.trim();
+    const loginEmail = identifier.includes("@") ? identifier : childAuthEmail(identifier);
+    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
     setLoading(false);
     if (error) {
       toast.error(error.message);
@@ -30,6 +36,7 @@ const Login = () => {
       navigate("/");
     }
   };
+
 
   return (
     <main className="min-h-screen flex items-center justify-center bg-background p-4">
@@ -44,7 +51,7 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required />
+              <Input id="email" type="text" inputMode="email" autoComplete="username" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Enter your email" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
