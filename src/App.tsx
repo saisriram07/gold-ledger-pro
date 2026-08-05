@@ -25,8 +25,10 @@ const SilverRecords = lazy(() => import("@/pages/SilverRecords"));
 const CombinationRecords = lazy(() => import("@/pages/CombinationRecords"));
 const Reminders = lazy(() => import("@/pages/Reminders"));
 const AdminPanel = lazy(() => import("@/pages/AdminPanel"));
+const SettingsPage = lazy(() => import("@/pages/Settings"));
 const CustomerProfile = lazy(() => import("@/pages/CustomerProfile"));
 const NotFound = lazy(() => import("@/pages/NotFound"));
+
 
 // Tuned defaults for production:
 // - staleTime 60s: cuts redundant refetches while navigating between records pages.
