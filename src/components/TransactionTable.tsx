@@ -185,7 +185,9 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
               <TableHead>Weight</TableHead>
               <TableHead className="text-right">Principal</TableHead>
               <TableHead className="text-right">Rate</TableHead>
+              <TableHead>Method</TableHead>
               <TableHead className="text-right">Interest</TableHead>
+
               <TableHead className="text-right">Total</TableHead>
               <TableHead className="text-right">Jama</TableHead>
               <TableHead className="text-right">Remaining</TableHead>
