@@ -17,7 +17,9 @@ export function exportTransactionsPdf(
   doc.setFontSize(10);
   doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 28);
 
-  const rows = transactions.map((t) => [
+  const rows = transactions.map((t) => {
+    const s = summarizeTransaction(t, jamaByTx?.get(t.id) ?? []);
+    return [
     t.date,
     t.serial_no,
     t.customer_name,
@@ -27,15 +29,20 @@ export function exportTransactionsPdf(
     t.item_type,
     t.item_name,
     t.weight,
-    `₹${Number(t.amount).toLocaleString()}`,
-    `₹${summarizeTransaction(t, jamaByTx?.get(t.id) ?? []).outstanding.toLocaleString()}`,
+    `₹${s.principal.toLocaleString()}`,
+    s.methodLabel,
+    `₹${s.interest.toLocaleString()}`,
+    `₹${s.totalPayable.toLocaleString()}`,
+    `₹${s.jamaPaid.toLocaleString()}`,
+    `₹${s.outstanding.toLocaleString()}`,
     (t.status || "pending").charAt(0).toUpperCase() + (t.status || "pending").slice(1),
     t.completed_date || "-",
-  ]);
+    ];
+  });
 
   autoTable(doc, {
     startY: 34,
-    head: [["Date", "Serial", "Customer", "Father", "Phone", "Area", "Type", "Item", "Weight", "Amount", "Outstanding", "Status", "Completed"]],
+    head: [["Date", "Serial", "Customer", "Father", "Phone", "Area", "Type", "Item", "Weight", "Principal", "Method", "Interest", "Total", "Jama", "Outstanding", "Status", "Completed"]],
     body: rows,
     styles: { fontSize: 8 },
     headStyles: { fillColor: [183, 142, 58] },

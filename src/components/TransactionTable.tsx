@@ -185,7 +185,9 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
               <TableHead>Weight</TableHead>
               <TableHead className="text-right">Principal</TableHead>
               <TableHead className="text-right">Rate</TableHead>
+              <TableHead>Method</TableHead>
               <TableHead className="text-right">Interest</TableHead>
+
               <TableHead className="text-right">Total</TableHead>
               <TableHead className="text-right">Jama</TableHead>
               <TableHead className="text-right">Remaining</TableHead>
@@ -223,7 +225,9 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
                 <TableCell>{weightLabel}</TableCell>
                 <TableCell className="text-right font-medium">₹{s.principal.toLocaleString()}</TableCell>
                 <TableCell className="text-right">{rateLabel}</TableCell>
+                <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{s.methodLabel}</TableCell>
                 <TableCell className="text-right">₹{s.interest.toLocaleString()}</TableCell>
+
                 <TableCell className="text-right font-medium">₹{s.totalPayable.toLocaleString()}</TableCell>
                 <TableCell className="text-right">₹{s.jamaPaid.toLocaleString()}</TableCell>
                 <TableCell className="text-right font-semibold text-primary">₹{s.remaining.toLocaleString()}</TableCell>
