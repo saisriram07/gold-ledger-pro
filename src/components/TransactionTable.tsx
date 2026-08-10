@@ -226,6 +226,7 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
                 <TableCell className="text-right font-medium">₹{s.principal.toLocaleString()}</TableCell>
                 <TableCell className="text-right">{rateLabel}</TableCell>
                 <TableCell className="whitespace-nowrap text-xs text-muted-foreground">{s.methodLabel}</TableCell>
+                <TableCell className="text-right">₹{s.interest.toLocaleString()}</TableCell>
 
                 <TableCell className="text-right font-medium">₹{s.totalPayable.toLocaleString()}</TableCell>
                 <TableCell className="text-right">₹{s.jamaPaid.toLocaleString()}</TableCell>
