@@ -24,18 +24,48 @@ const Login = () => {
     }
     setLoading(true);
     // Staff (child) logins sign in with their username, which maps to a
-    // deterministic internal address — no lookup, no email required.
+    // deterministic internal address. The username may have been created from
+    // something that looked like an email, so try both forms.
     const identifier = email.trim();
-    const loginEmail = identifier.includes("@") ? identifier : childAuthEmail(identifier);
-    const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
-    setLoading(false);
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Login successful!");
-      navigate("/");
+    const candidates = identifier.includes("@")
+      ? [identifier, childAuthEmail(identifier)]
+      : [childAuthEmail(identifier)];
+
+    let lastError: string | null = null;
+    let signedIn = false;
+    for (const loginEmail of candidates) {
+      const { error } = await supabase.auth.signInWithPassword({ email: loginEmail, password });
+      if (!error) { signedIn = true; break; }
+      lastError = error.message;
     }
+
+    if (!signedIn) {
+      setLoading(false);
+      toast.error(lastError ?? "Invalid login credentials");
+      return;
+    }
+
+    // Block disabled staff logins with a clear message.
+    const { data: userData } = await supabase.auth.getUser();
+    if (userData?.user) {
+      const { data: child } = await supabase
+        .from("child_users")
+        .select("is_disabled")
+        .eq("user_id", userData.user.id)
+        .maybeSingle();
+      if (child?.is_disabled) {
+        await supabase.auth.signOut();
+        setLoading(false);
+        toast.error("Account Disabled — please contact your shop owner.");
+        return;
+      }
+    }
+
+    setLoading(false);
+    toast.success("Login successful!");
+    navigate("/");
   };
+
 
 
   return (
