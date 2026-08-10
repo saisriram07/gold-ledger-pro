@@ -14,6 +14,8 @@ describe("engine", () => {
   });
   it("jama chain", () => {
     const l = buildLedger(12000,2,"2023-05-08",[{amount:5000,paid_date:"2024-04-19"}],"2025-11-20");
-    expect(Math.round(l.remainingPrincipal + l.remainingInterest)).toBe(13687);
+    // 9728 base after jama, then 1y7m at 2% -> annual compound + simple remainder
+    expect(l.periods[0].remainingBalance).toBe(9728);
+    expect(Math.round(l.remainingPrincipal + l.remainingInterest)).toBe(13751);
   });
 });
