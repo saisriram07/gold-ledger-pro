@@ -144,13 +144,15 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
           <Stat label="Jama Paid" value={`₹${summary.jamaPaid.toLocaleString()}`} />
           <Stat label="Remaining" value={`₹${summary.remaining.toLocaleString()}`} highlight />
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-sm">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
+          <Stat label="Interest Method" value={summary.methodLabel} />
           <Stat label="Remaining Principal" value={`₹${summary.remainingPrincipal.toLocaleString()}`} />
           <Stat label="Remaining Interest" value={`₹${summary.remainingInterest.toLocaleString()}`} />
           <Stat label="Outstanding Balance" value={`₹${summary.outstanding.toLocaleString()}`} highlight />
           <Stat label="Last Payment Date" value={summary.lastPaymentDate || "-"} />
           <Stat label="Next Interest From" value={summary.nextInterestDate} />
         </div>
+
 
         <div>
           <h3 className="text-sm font-semibold mb-2">Jama History</h3>
