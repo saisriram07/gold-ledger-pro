@@ -18,6 +18,8 @@ import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
 import { useChildUsers, useChildActivity, type ChildUser } from "@/hooks/useChildUsers";
 import { PERMISSION_MODULES, emptyPermissions, normalizeUsername, type PermissionRow } from "@/lib/permissions";
+import { AppearanceSettings } from "@/components/AppearanceSettings";
+
 
 type FormState = {
   full_name: string;
