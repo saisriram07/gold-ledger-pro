@@ -149,6 +149,9 @@ const Settings = () => {
       <Seo title="Settings — Gold Finance Management" description="Manage staff logins, permissions and activity for your shop." path="/settings" noindex />
       <h1 className="text-2xl font-bold text-primary">Settings</h1>
 
+      <AppearanceSettings />
+
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">
           <CardTitle className="text-base">Child User Management</CardTitle>
