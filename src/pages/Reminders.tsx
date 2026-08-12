@@ -75,8 +75,11 @@ const Reminders = () => {
     const now = new Date();
     return transactions
       .filter((t) => {
+        // Completed transactions stay in records but are never eligible for reminders.
+        if (String(t.status || "").toLowerCase() === "completed") return false;
         const months = differenceInMonths(now, new Date(t.date));
         switch (timeFilter) {
+
           case "1y": return months >= 12;
           case "2y": return months >= 24;
           case "3y": return months >= 36;

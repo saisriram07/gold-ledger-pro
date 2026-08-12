@@ -18,6 +18,8 @@ import { Seo } from "@/components/Seo";
 import { toast } from "sonner";
 import { useChildUsers, useChildActivity, type ChildUser } from "@/hooks/useChildUsers";
 import { PERMISSION_MODULES, emptyPermissions, normalizeUsername, type PermissionRow } from "@/lib/permissions";
+import { AppearanceSettings } from "@/components/AppearanceSettings";
+
 
 type FormState = {
   full_name: string;
@@ -148,6 +150,9 @@ const Settings = () => {
     <div className="space-y-4">
       <Seo title="Settings — Gold Finance Management" description="Manage staff logins, permissions and activity for your shop." path="/settings" noindex />
       <h1 className="text-2xl font-bold text-primary">Settings</h1>
+
+      <AppearanceSettings />
+
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between gap-2">
