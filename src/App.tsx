@@ -105,7 +105,10 @@ const AppRoutes = () => (
       <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
       <Route path="/admin-register" element={<PublicRoute><AdminRegister /></PublicRoute>} />
-      <Route path="/forgot-password" element={<PublicRoute><ForgotPassword /></PublicRoute>} />
+      {/* Not wrapped in PublicRoute: the emailed recovery link creates a temporary
+          session, and the user must still be able to set a new password. */}
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+
       <Route path="/" element={<ProtectedRoute><AdminRedirect><Dashboard /></AdminRedirect></ProtectedRoute>} />
       <Route path="/new-transaction" element={<ProtectedRoute module="new_transaction"><NewTransaction /></ProtectedRoute>} />
       <Route path="/records" element={<ProtectedRoute module="total_records"><TotalRecords /></ProtectedRoute>} />
