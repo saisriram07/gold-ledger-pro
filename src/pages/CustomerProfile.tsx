@@ -145,7 +145,7 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
           <Stat label="Remaining" value={`₹${summary.remaining.toLocaleString()}`} highlight />
         </div>
         <div className="grid grid-cols-2 md:grid-cols-6 gap-3 text-sm">
-          <Stat label="Interest Method" value={summary.methodLabel} />
+          
           <Stat label="Remaining Principal" value={`₹${summary.remainingPrincipal.toLocaleString()}`} />
           <Stat label="Remaining Interest" value={`₹${summary.remainingInterest.toLocaleString()}`} />
           <Stat label="Outstanding Balance" value={`₹${summary.outstanding.toLocaleString()}`} highlight />
@@ -160,7 +160,7 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
             <p className="text-xs text-muted-foreground">No payments recorded.</p>
           ) : (
             <Table>
-              <TableHeader><TableRow><TableHead>Payment Date</TableHead><TableHead>Interest till Date</TableHead><TableHead>Jama Amount</TableHead><TableHead>Remaining Balance</TableHead><TableHead>Next Interest From</TableHead><TableHead>Notes</TableHead><TableHead></TableHead></TableRow></TableHeader>
+              <TableHeader><TableRow><TableHead>Payment Date</TableHead><TableHead>Interest till Date</TableHead><TableHead>Amount Paid (Jama)</TableHead><TableHead>Remaining Balance</TableHead><TableHead>Next Interest From</TableHead><TableHead>Notes</TableHead><TableHead></TableHead></TableRow></TableHeader>
               <TableBody>
                 {jama.map((j) => {
                   const p = summary.periods.find((x) => x.paidDate === j.paid_date);
