@@ -13,6 +13,7 @@ const DashboardCharts = lazy(() => import("@/components/DashboardCharts"));
 
 const Dashboard = () => {
   const { data: transactions = [], isLoading } = useTransactions();
+  const { data: allJama = [], isLoading: jamaLoading } = useAllJama();
 
   const monthlyData = useMemo(() => {
     const now = new Date();
