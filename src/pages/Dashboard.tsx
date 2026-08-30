@@ -59,8 +59,10 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Total Transactions</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">{transactions.length}</p></CardContent></Card>
         <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">This Year Total</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">₹{yearlyTotal.toLocaleString()}</p></CardContent></Card>
-        <Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Overall Total</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">₹{overallTotal.toLocaleString()}</p></CardContent></Card>
+<Card><CardHeader className="pb-2"><CardTitle className="text-sm text-muted-foreground">Overall Total</CardTitle></CardHeader><CardContent><p className="text-3xl font-bold">₹{overallTotal.toLocaleString()}</p></CardContent></Card>
       </div>
+
+      <LoanAging transactions={transactions} allJama={allJama} loading={jamaLoading} />
 
       <Suspense fallback={
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
