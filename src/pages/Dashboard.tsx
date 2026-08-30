@@ -1,5 +1,7 @@
 import { Seo } from "@/components/Seo";
 import { useTransactions } from "@/hooks/useTransactions";
+import { useAllJama } from "@/hooks/useJama";
+import LoanAging from "@/components/LoanAging";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { lazy, Suspense, useMemo } from "react";
