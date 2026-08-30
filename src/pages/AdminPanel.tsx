@@ -67,9 +67,8 @@ const AdminPanel = () => {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  if (!isAdmin) return <Navigate to="/" replace />;
-  if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
-
+// Hooks must run unconditionally — before any early return — so React
+  // always sees the same hook order across renders (loading -> loaded).
   // Hide the currently logged-in admin from the list
   const baseShops = useMemo(() => shops.filter((s) => s.user_id !== user?.id), [shops, user?.id]);
 
@@ -86,6 +85,9 @@ const AdminPanel = () => {
       );
     });
   }, [baseShops, deferredSearch]);
+
+  if (!isAdmin) return <Navigate to="/" replace />;
+  if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
 
   return (
     <div className="space-y-6">
