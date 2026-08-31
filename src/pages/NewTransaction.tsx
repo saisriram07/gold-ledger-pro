@@ -189,8 +189,8 @@ const NewTransaction = () => {
                         {date ? format(date, "PPP") : "Pick a date"}
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 bg-popover z-50" align="start">
-                      <Calendar mode="single" selected={date} onSelect={setDate} initialFocus className="p-3 pointer-events-auto" />
+                    <PopoverContent className="w-auto p-3 bg-popover z-50" align="start">
+                      <WheelDatePicker value={date} onChange={setDate} />
                     </PopoverContent>
                   </Popover>
                 </div>
