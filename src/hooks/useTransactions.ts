@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -6,23 +7,39 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 
 type Transaction = Tables<"transactions">;
 
+/**
+ * Single shared transactions query.
+ *
+ * Previously each item-type filter had its own query key, so navigating
+ * Total → Gold → Silver → Combination issued 3-4 separate network requests for
+ * overlapping data. Now every page reads the same cached row set (one request
+ * per session window) and the item-type narrowing happens in memory.
+ */
 export function useTransactions(itemTypeFilter?: "gold" | "silver") {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
   const query = useQuery({
-    queryKey: ["transactions", itemTypeFilter],
+    queryKey: ["transactions"],
     queryFn: async () => {
-      let q = supabase.from("transactions").select("*").order("date", { ascending: true });
-      if (itemTypeFilter) {
-        q = q.eq("item_type", itemTypeFilter);
-      }
-      const { data, error } = await q;
+      const { data, error } = await supabase
+        .from("transactions")
+        .select("*")
+        .order("date", { ascending: true });
       if (error) throw error;
       return data as Transaction[];
     },
     enabled: !!user,
+    // Row set is stable within a working session; refetch happens on mutation.
+    staleTime: 60_000,
   });
+
+  const all = query.data;
+  const data = useMemo(() => {
+    if (!all) return all;
+    if (!itemTypeFilter) return all;
+    return all.filter((t) => t.item_type === itemTypeFilter);
+  }, [all, itemTypeFilter]);
 
   const addTransaction = useMutation({
     mutationFn: async (tx: Omit<TablesInsert<"transactions">, "user_id">) => {
@@ -62,5 +79,5 @@ export function useTransactions(itemTypeFilter?: "gold" | "silver") {
     onError: (err: Error) => toast.error(err.message),
   });
 
-  return { ...query, addTransaction, deleteTransaction, updateStatus };
+  return { ...query, data, addTransaction, deleteTransaction, updateStatus };
 }
