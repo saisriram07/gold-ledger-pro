@@ -154,13 +154,7 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
             <DialogTitle>Select Completion Date</DialogTitle>
           </DialogHeader>
           <div className="flex justify-center">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              initialFocus
-              className={cn("p-3 pointer-events-auto")}
-            />
+            <WheelDatePicker value={selectedDate} onChange={setSelectedDate} className={cn("pointer-events-auto")} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setDatePickerOpen(false)}>Cancel</Button>
