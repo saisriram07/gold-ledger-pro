@@ -12,7 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Calendar } from "@/components/ui/calendar";
+import { WheelDatePicker } from "@/components/WheelDatePicker";
 import { CalendarIcon, ArrowLeft, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
@@ -194,7 +194,7 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
                   <CalendarIcon className="mr-2 h-4 w-4" />{paidDate ? format(paidDate, "PP") : "Date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-popover z-50"><Calendar mode="single" selected={paidDate} onSelect={setPaidDate} initialFocus className="p-3 pointer-events-auto" /></PopoverContent>
+              <PopoverContent className="w-auto p-3 bg-popover z-50"><WheelDatePicker value={paidDate} onChange={setPaidDate} /></PopoverContent>
             </Popover>
           </div>
           <div className="space-y-1"><Label>Amount</Label><Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} required /></div>
