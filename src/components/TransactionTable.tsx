@@ -208,7 +208,7 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((t) => {
+            {pageRows.map((t) => {
               const s = summarizeTransaction(t, jamaByTx.get(t.id) ?? []);
               const isCombo = s.isCombination;
               const typeLabel = isCombo ? "Gold + Silver Combination" : (t.loan_type || t.item_type);
