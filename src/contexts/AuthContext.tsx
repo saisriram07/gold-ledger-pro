@@ -128,7 +128,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
   };
 
-  const hydrate = async (userId: string) => {
+  // Guards against duplicate hydration: onAuthStateChange fires for
+  // INITIAL_SESSION / SIGNED_IN / TOKEN_REFRESHED and getSession() resolves too,
+  // which previously re-fetched child_users + profiles + user_roles 3x per load.
+  const hydratedFor = useRef<string | null>(null);
+  const hydrate = async (userId: string, force = false) => {
+    if (!force && hydratedFor.current === userId) return;
+    hydratedFor.current = userId;
     const child = await fetchChild(userId);
     await fetchProfile(userId, child);
     await fetchRole(userId);
@@ -141,8 +147,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
+          const uid = session.user.id;
           setTimeout(async () => {
-            await hydrate(session.user.id);
+            await hydrate(uid);
             setLoading(false);
           }, 0);
         } else {
@@ -152,6 +159,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setChildUser(null);
           setChildPermissions([]);
           sessionRowId.current = null;
+          hydratedFor.current = null;
           setLoading(false);
         }
       }
@@ -168,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     return () => subscription.unsubscribe();
   }, []);
+
 
   const can = useCallback(
     (module: ModuleKey, action: PermissionAction = "view") => {
@@ -206,24 +215,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        isAdmin,
-        loading,
-        isDisabled,
-        isChild: !!childUser,
-        childUser,
-        childPermissions,
-        dataOwnerId: childUser?.parent_user_id ?? user?.id ?? null,
-        can,
-        signOut,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // Memoized so consumers don't re-render on every provider render.
+  const value = React.useMemo<AuthContextType>(
+    () => ({
+      user,
+      session,
+      profile,
+      isAdmin,
+      loading,
+      isDisabled,
+      isChild: !!childUser,
+      childUser,
+      childPermissions,
+      dataOwnerId: childUser?.parent_user_id ?? user?.id ?? null,
+      can,
+      signOut,
+    }),
+    [user, session, profile, isAdmin, loading, isDisabled, childUser, childPermissions, can],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
