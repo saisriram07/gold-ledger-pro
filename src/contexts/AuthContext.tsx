@@ -215,24 +215,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        session,
-        profile,
-        isAdmin,
-        loading,
-        isDisabled,
-        isChild: !!childUser,
-        childUser,
-        childPermissions,
-        dataOwnerId: childUser?.parent_user_id ?? user?.id ?? null,
-        can,
-        signOut,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  // Memoized so consumers don't re-render on every provider render.
+  const value = React.useMemo<AuthContextType>(
+    () => ({
+      user,
+      session,
+      profile,
+      isAdmin,
+      loading,
+      isDisabled,
+      isChild: !!childUser,
+      childUser,
+      childPermissions,
+      dataOwnerId: childUser?.parent_user_id ?? user?.id ?? null,
+      can,
+      signOut,
+    }),
+    [user, session, profile, isAdmin, loading, isDisabled, childUser, childPermissions, can],
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
+
