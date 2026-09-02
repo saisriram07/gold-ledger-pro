@@ -295,6 +295,25 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
         </Table>
       </div>
 
+      {filtered.length > PAGE_SIZE && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <p className="text-muted-foreground">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} records
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>
+              Previous
+            </Button>
+            <span className="text-muted-foreground">Page {currentPage} / {pageCount}</span>
+            <Button variant="outline" size="sm" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+
+
 
 
     </div>
