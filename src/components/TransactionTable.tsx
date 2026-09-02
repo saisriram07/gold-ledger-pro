@@ -62,8 +62,11 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
 
   // Memoize filtering and totals so re-renders that don't touch `transactions`
   // or `search` (e.g. dialog open/close) skip the O(n) work entirely.
+  // `useDeferredValue` keeps typing responsive on large record sets: the input
+  // updates immediately while the expensive table filter lags one frame behind.
+  const deferredSearch = useDeferredValue(search);
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = deferredSearch.trim().toLowerCase();
     if (!q) return transactions;
     return transactions.filter(
       (t) =>
@@ -73,12 +76,27 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
         t.area.toLowerCase().includes(q) ||
         t.item_type.includes(q),
     );
-  }, [transactions, search]);
+  }, [transactions, deferredSearch]);
 
   const overallTotal = useMemo(
     () => filtered.reduce((s, t) => s + Number(t.amount), 0),
     [filtered],
   );
+
+  // Client-side pagination: only PAGE_SIZE rows are ever mounted, so interest
+  // math and DOM nodes stay bounded even with thousands of transactions.
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch, transactions]);
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = useMemo(
+    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filtered, currentPage],
+  );
+
 
   const handleStatusChange = (id: string, val: string) => {
     if (val === "completed") {
