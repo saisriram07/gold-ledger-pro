@@ -1,4 +1,4 @@
-import { memo, useMemo, useState } from "react";
+import { memo, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -62,8 +62,11 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
 
   // Memoize filtering and totals so re-renders that don't touch `transactions`
   // or `search` (e.g. dialog open/close) skip the O(n) work entirely.
+  // `useDeferredValue` keeps typing responsive on large record sets: the input
+  // updates immediately while the expensive table filter lags one frame behind.
+  const deferredSearch = useDeferredValue(search);
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = deferredSearch.trim().toLowerCase();
     if (!q) return transactions;
     return transactions.filter(
       (t) =>
@@ -73,12 +76,27 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
         t.area.toLowerCase().includes(q) ||
         t.item_type.includes(q),
     );
-  }, [transactions, search]);
+  }, [transactions, deferredSearch]);
 
   const overallTotal = useMemo(
     () => filtered.reduce((s, t) => s + Number(t.amount), 0),
     [filtered],
   );
+
+  // Client-side pagination: only PAGE_SIZE rows are ever mounted, so interest
+  // math and DOM nodes stay bounded even with thousands of transactions.
+  const PAGE_SIZE = 50;
+  const [page, setPage] = useState(1);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  useEffect(() => {
+    setPage(1);
+  }, [deferredSearch, transactions]);
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = useMemo(
+    () => filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE),
+    [filtered, currentPage],
+  );
+
 
   const handleStatusChange = (id: string, val: string) => {
     if (val === "completed") {
@@ -190,7 +208,7 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filtered.map((t) => {
+            {pageRows.map((t) => {
               const s = summarizeTransaction(t, jamaByTx.get(t.id) ?? []);
               const isCombo = s.isCombination;
               const typeLabel = isCombo ? "Gold + Silver Combination" : (t.loan_type || t.item_type);
@@ -276,6 +294,25 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
           </TableBody>
         </Table>
       </div>
+
+      {filtered.length > PAGE_SIZE && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
+          <p className="text-muted-foreground">
+            Showing {(currentPage - 1) * PAGE_SIZE + 1}–{Math.min(currentPage * PAGE_SIZE, filtered.length)} of {filtered.length} records
+          </p>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)}>
+              Previous
+            </Button>
+            <span className="text-muted-foreground">Page {currentPage} / {pageCount}</span>
+            <Button variant="outline" size="sm" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)}>
+              Next
+            </Button>
+          </div>
+        </div>
+      )}
+
+
 
 
 

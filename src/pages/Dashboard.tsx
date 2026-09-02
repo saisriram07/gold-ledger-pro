@@ -15,39 +15,48 @@ const Dashboard = () => {
   const { data: transactions = [], isLoading } = useTransactions();
   const { data: allJama = [], isLoading: jamaLoading } = useAllJama();
 
-  const monthlyData = useMemo(() => {
+  // One pass over the transactions instead of 12 monthly filters + 4 more
+  // full scans. Same values, O(n) instead of O(n·16).
+  const { monthlyData, distributionData, yearlyTotal, overallTotal } = useMemo(() => {
     const now = new Date();
-    const months: { month: string; amount: number }[] = [];
+    const keys: string[] = [];
+    const labels: string[] = [];
+    const totals = new Map<string, number>();
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      const label = d.toLocaleString("default", { month: "short", year: "2-digit" });
-      const total = transactions
-        .filter((t) => t.date.startsWith(key))
-        .reduce((s, t) => s + Number(t.amount), 0);
-      months.push({ month: label, amount: total });
+      keys.push(key);
+      labels.push(d.toLocaleString("default", { month: "short", year: "2-digit" }));
+      totals.set(key, 0);
     }
-    return months;
+
+    const yearPrefix = String(now.getFullYear());
+    let gold = 0;
+    let silver = 0;
+    let year = 0;
+    let overall = 0;
+
+    for (const t of transactions) {
+      const amount = Number(t.amount);
+      overall += amount;
+      if (t.date.startsWith(yearPrefix)) year += amount;
+      const monthKey = t.date.slice(0, 7);
+      if (totals.has(monthKey)) totals.set(monthKey, (totals.get(monthKey) ?? 0) + amount);
+      if (t.item_type === "gold" || t.item_type === "combination") gold += amount;
+      if (t.item_type === "silver" || t.item_type === "combination") silver += amount;
+    }
+
+    return {
+      monthlyData: keys.map((k, i) => ({ month: labels[i], amount: totals.get(k) ?? 0 })),
+      distributionData: [
+        { name: "Gold", value: gold },
+        { name: "Silver", value: silver },
+      ],
+      yearlyTotal: year,
+      overallTotal: overall,
+    };
   }, [transactions]);
 
-  const distributionData = useMemo(() => {
-    const gold = transactions.filter((t) => t.item_type === "gold" || t.item_type === "combination").reduce((s, t) => s + Number(t.amount), 0);
-    const silver = transactions.filter((t) => t.item_type === "silver" || t.item_type === "combination").reduce((s, t) => s + Number(t.amount), 0);
-    return [
-      { name: "Gold", value: gold },
-      { name: "Silver", value: silver },
-    ];
-  }, [transactions]);
-
-  const yearlyTotal = useMemo(() => {
-    const year = new Date().getFullYear().toString();
-    return transactions.filter((t) => t.date.startsWith(year)).reduce((s, t) => s + Number(t.amount), 0);
-  }, [transactions]);
-
-  const overallTotal = useMemo(
-    () => transactions.reduce((s, t) => s + Number(t.amount), 0),
-    [transactions],
-  );
 
   if (isLoading) return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading...</div>;
 

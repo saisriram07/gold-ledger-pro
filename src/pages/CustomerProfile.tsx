@@ -80,7 +80,10 @@ const CustomerProfile = () => {
 };
 
 function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
-  const { addJama, deleteJama } = useJama(tx.id);
+  // Jama rows already come from the single useAllJama() query on the parent —
+  // disable the per-loan query so N loan cards don't fire N requests.
+  const { addJama, deleteJama } = useJama(tx.id, { enabled: false });
+
   const [amount, setAmount] = useState("");
   const [notes, setNotes] = useState("");
   const [paidDate, setPaidDate] = useState<Date | undefined>(new Date());
