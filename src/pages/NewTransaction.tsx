@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCustomers } from "@/hooks/useCustomers";
