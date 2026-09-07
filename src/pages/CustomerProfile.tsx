@@ -26,7 +26,6 @@ const CustomerProfile = () => {
   const { data: allTx = [] } = useTransactions();
   const { data: allJama = [] } = useAllJama();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [drafts, setDrafts] = useState<Record<string, number[]>>({});
 
   useEffect(() => {
     if (!customer?.photo_url) return;
