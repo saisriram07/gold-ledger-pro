@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { WheelDatePicker } from "@/components/WheelDatePicker";
-import { CalendarIcon, ArrowLeft, Trash2 } from "lucide-react";
+import { CalendarIcon, ArrowLeft, Trash2, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { summarizeTransaction } from "@/lib/interest";
@@ -26,6 +26,7 @@ const CustomerProfile = () => {
   const { data: allTx = [] } = useTransactions();
   const { data: allJama = [] } = useAllJama();
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [drafts, setDrafts] = useState<Record<string, number[]>>({});
 
   useEffect(() => {
     if (!customer?.photo_url) return;
@@ -38,6 +39,11 @@ const CustomerProfile = () => {
     () => allTx.filter((t) => t.customer_id === id).sort((a, b) => a.date.localeCompare(b.date)),
     [allTx, id],
   );
+
+  const addDraft = (txId: string) =>
+    setDrafts((d) => ({ ...d, [txId]: [...(d[txId] || []), Date.now()] }));
+  const removeDraft = (txId: string, key: number) =>
+    setDrafts((d) => ({ ...d, [txId]: (d[txId] || []).filter((k) => k !== key) }));
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
   if (!customer) return <div className="text-center py-8">Customer not found. <Link to="/records" className="text-primary underline">Back</Link></div>;
@@ -73,13 +79,84 @@ const CustomerProfile = () => {
       <h2 className="text-lg font-semibold pt-2">Loans & Jama History</h2>
       {customerTx.length === 0 && <p className="text-muted-foreground text-sm">No transactions yet for this customer.</p>}
       {customerTx.map((t) => (
-        <LoanCard key={t.id} tx={t} jama={allJama.filter((j) => j.transaction_id === t.id)} />
+        <div key={t.id} className={cn("grid gap-4", (drafts[t.id]?.length ?? 0) > 0 && "lg:grid-cols-2 items-start")}>
+          <LoanCard tx={t} jama={allJama.filter((j) => j.transaction_id === t.id)} onAddAmount={() => addDraft(t.id)} />
+          {(drafts[t.id] || []).map((key) => (
+            <NewAmountCard key={key} tx={t} onClose={() => removeDraft(t.id, key)} />
+          ))}
+        </div>
       ))}
     </div>
   );
 };
 
-function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
+/**
+ * "Add Amount" box: same loan details as the source loan, with an empty Amount
+ * field. Saving creates a new loan row (never touches the original).
+ */
+function NewAmountCard({ tx, onClose }: { tx: any; onClose: () => void }) {
+  const { addTransaction } = useTransactions();
+  const [amount, setAmount] = useState("");
+  const isCombo = tx.item_type === "combination";
+
+  const save = (e: React.FormEvent) => {
+    e.preventDefault();
+    const value = parseFloat(amount);
+    if (!amount || Number.isNaN(value)) return;
+    const {
+      id: _id, created_at: _c, user_id: _u, amount: _a, principal_amount: _p,
+      reminder_sent: _rs, reminder_date: _rd, completed_date: _cd, status: _st,
+      ...rest
+    } = tx;
+    addTransaction.mutate(
+      { ...rest, amount: value, principal_amount: value, status: "pending" },
+      { onSuccess: onClose },
+    );
+  };
+
+  return (
+    <Card className="border-primary/40">
+      <CardHeader>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <CardTitle className="text-base">
+            {isCombo ? <>Gold + Silver Combination</> : <><span className="capitalize">{tx.loan_type || tx.item_type}</span> · {tx.item_name} · {tx.weight}</>}
+          </CardTitle>
+          <div className="flex items-center gap-2 text-xs">
+            <Badge variant="outline">Serial {tx.serial_no}</Badge>
+            <Badge variant="outline">{tx.date}</Badge>
+            <Badge variant="default" className="capitalize">pending</Badge>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onClose} aria-label="Cancel new amount"><X className="h-4 w-4" /></Button>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <dl className="grid grid-cols-2 gap-3 text-sm">
+          <div><dt className="text-muted-foreground">Customer</dt><dd className="font-medium">{tx.customer_name}</dd></div>
+          <div><dt className="text-muted-foreground">Loan Type</dt><dd className="font-medium capitalize">{tx.loan_type || tx.item_type}</dd></div>
+          <div><dt className="text-muted-foreground">Weight</dt><dd className="font-medium">{tx.weight || "-"}</dd></div>
+          <div><dt className="text-muted-foreground">Interest Rate</dt><dd className="font-medium">{tx.interest_rate ?? "-"}%</dd></div>
+          {isCombo && (
+            <>
+              <div><dt className="text-muted-foreground">Gold</dt><dd className="font-medium">{tx.gold_item_name || "-"} · {tx.gold_weight || "-"} · {tx.gold_rate ?? "-"}%</dd></div>
+              <div><dt className="text-muted-foreground">Silver</dt><dd className="font-medium">{tx.silver_item_name || "-"} · {tx.silver_weight || "-"} · {tx.silver_rate ?? "-"}%</dd></div>
+            </>
+          )}
+        </dl>
+        <form onSubmit={save} className="border-t pt-3 grid grid-cols-1 sm:grid-cols-[1fr,auto] gap-3 items-end">
+          <div className="space-y-1">
+            <Label>Amount</Label>
+            <Input type="number" min="0" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" required autoFocus />
+          </div>
+          <Button type="submit" disabled={addTransaction.isPending}>Save</Button>
+        </form>
+        <p className="text-xs text-muted-foreground">Interest, Total Payable, Jama and Remaining Balance are calculated after saving.</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+
+function LoanCard({ tx, jama, onAddAmount }: { tx: any; jama: any[]; onAddAmount?: () => void }) {
   // Jama rows already come from the single useAllJama() query on the parent —
   // disable the per-loan query so N loan cards don't fire N requests.
   const { addJama, deleteJama } = useJama(tx.id, { enabled: false });
@@ -115,6 +192,11 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
             <Badge variant="outline">Serial {tx.serial_no}</Badge>
             <Badge variant="outline">{tx.date}</Badge>
             <Badge variant={tx.status === "completed" ? "secondary" : "default"} className="capitalize">{tx.status}</Badge>
+            {onAddAmount && (
+              <Button type="button" variant="outline" size="sm" className="h-7 gap-1" onClick={onAddAmount}>
+                <Plus className="h-3 w-3" /> Add Amount
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
