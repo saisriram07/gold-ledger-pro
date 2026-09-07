@@ -32,7 +32,7 @@ interface Props {
   isLoading: boolean;
   onDelete: (id: string) => void;
   onStatusChange?: (id: string, status: string, completed_date?: string | null) => void;
-  onDuplicate?: (tx: Pick<Transaction, "serial_no" | "customer_name" | "father_name" | "phone" | "area" | "item_type" | "item_name" | "weight">) => void;
+  onDuplicate?: (tx: Transaction) => void;
   title: string;
   totalLabel?: string;
   totalAmount?: number;
@@ -118,16 +118,9 @@ function TransactionTableImpl({ transactions, isLoading, onDelete, onStatusChang
   };
 
   const handleDuplicate = (t: Transaction) => {
-    onDuplicate?.({
-      serial_no: t.serial_no,
-      customer_name: t.customer_name,
-      father_name: t.father_name,
-      phone: t.phone,
-      area: t.area,
-      item_type: t.item_type,
-      item_name: t.item_name,
-      weight: t.weight,
-    });
+    // Carry over every identifying detail; the new transaction page keeps the
+    // Amount empty and defaults the Date to today.
+    onDuplicate?.(t);
   };
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
