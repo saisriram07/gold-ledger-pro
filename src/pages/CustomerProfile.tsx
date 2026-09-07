@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { WheelDatePicker } from "@/components/WheelDatePicker";
-import { CalendarIcon, ArrowLeft, Trash2 } from "lucide-react";
+import { CalendarIcon, ArrowLeft, Trash2, Plus, X } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { summarizeTransaction } from "@/lib/interest";
@@ -156,7 +156,7 @@ function NewAmountCard({ tx, onClose }: { tx: any; onClose: () => void }) {
 }
 
 
-function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
+function LoanCard({ tx, jama, onAddAmount }: { tx: any; jama: any[]; onAddAmount?: () => void }) {
   // Jama rows already come from the single useAllJama() query on the parent —
   // disable the per-loan query so N loan cards don't fire N requests.
   const { addJama, deleteJama } = useJama(tx.id, { enabled: false });
@@ -192,6 +192,11 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
             <Badge variant="outline">Serial {tx.serial_no}</Badge>
             <Badge variant="outline">{tx.date}</Badge>
             <Badge variant={tx.status === "completed" ? "secondary" : "default"} className="capitalize">{tx.status}</Badge>
+            {onAddAmount && (
+              <Button type="button" variant="outline" size="sm" className="h-7 gap-1" onClick={onAddAmount}>
+                <Plus className="h-3 w-3" /> Add Amount
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>
