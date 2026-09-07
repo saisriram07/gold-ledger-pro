@@ -74,11 +74,8 @@ const CustomerProfile = () => {
       <h2 className="text-lg font-semibold pt-2">Loans & Jama History</h2>
       {customerTx.length === 0 && <p className="text-muted-foreground text-sm">No transactions yet for this customer.</p>}
       {customerTx.map((t) => (
-        <div key={t.id} className={cn("grid gap-4", (drafts[t.id]?.length ?? 0) > 0 && "lg:grid-cols-2 items-start")}>
-          <LoanCard tx={t} jama={allJama.filter((j) => j.transaction_id === t.id)} onAddAmount={() => addDraft(t.id)} />
-          {(drafts[t.id] || []).map((key) => (
-            <NewAmountCard key={key} tx={t} onClose={() => removeDraft(t.id, key)} />
-          ))}
+        <div key={t.id} className="grid gap-4">
+          <LoanCard tx={t} jama={allJama.filter((j) => j.transaction_id === t.id)} />
         </div>
       ))}
     </div>
