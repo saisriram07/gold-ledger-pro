@@ -39,10 +39,6 @@ const CustomerProfile = () => {
     [allTx, id],
   );
 
-  const addDraft = (txId: string) =>
-    setDrafts((d) => ({ ...d, [txId]: [...(d[txId] || []), Date.now()] }));
-  const removeDraft = (txId: string, key: number) =>
-    setDrafts((d) => ({ ...d, [txId]: (d[txId] || []).filter((k) => k !== key) }));
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
   if (!customer) return <div className="text-center py-8">Customer not found. <Link to="/records" className="text-primary underline">Back</Link></div>;
