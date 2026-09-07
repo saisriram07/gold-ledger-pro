@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useCustomers } from "@/hooks/useCustomers";
@@ -44,19 +44,40 @@ const NewTransaction = () => {
 
   const availableRates = useMemo(() => (financeType === "silver" ? SILVER_RATES : GOLD_RATES), [financeType]);
 
-  useEffect(() => { setSingle((f) => ({ ...f, rate: "" })); }, [financeType]);
+  const prefillApplied = useRef(false);
+  useEffect(() => {
+    // Keep the prefilled rate when arriving from the "+" action.
+    if (prefillApplied.current) { prefillApplied.current = false; return; }
+    setSingle((f) => ({ ...f, rate: "" }));
+  }, [financeType]);
 
 
   useEffect(() => {
     if (!prefill) return;
     const t: FinanceType = prefill.item_type === "silver" ? "silver" : prefill.item_type === "combination" ? "combination" : "gold";
+    if (t !== financeType) prefillApplied.current = true;
     setFinanceType(t);
+    // Interest for the new entry starts today, on the newly entered amount only.
+    setDate(new Date());
+    setSerialNo(prefill.serial_no ? String(prefill.serial_no) : "");
     setCust({
       name: prefill.customer_name || "", father_name: prefill.father_name || "",
       phone: prefill.phone || "", area: prefill.area || "", address: "", age: "",
     });
-    if (t !== "combination") {
-      setSingle((f) => ({ ...f, item_name: prefill.item_name || "", weight: prefill.weight || "" }));
+    if (t === "combination") {
+      setGold({
+        item_name: prefill.gold_item_name || "", weight: prefill.gold_weight || "",
+        amount: "", rate: prefill.gold_rate != null ? String(prefill.gold_rate) : "",
+      });
+      setSilver({
+        item_name: prefill.silver_item_name || "", weight: prefill.silver_weight || "",
+        amount: "", rate: prefill.silver_rate != null ? String(prefill.silver_rate) : "",
+      });
+    } else {
+      setSingle({
+        item_name: prefill.item_name || "", weight: prefill.weight || "",
+        amount: "", rate: prefill.interest_rate != null ? String(prefill.interest_rate) : "",
+      });
     }
     window.history.replaceState({}, document.title);
   }, [prefill]);
