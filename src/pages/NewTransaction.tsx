@@ -44,12 +44,18 @@ const NewTransaction = () => {
 
   const availableRates = useMemo(() => (financeType === "silver" ? SILVER_RATES : GOLD_RATES), [financeType]);
 
-  useEffect(() => { setSingle((f) => ({ ...f, rate: "" })); }, [financeType]);
+  const prefillApplied = useRef(false);
+  useEffect(() => {
+    // Keep the prefilled rate when arriving from the "+" action.
+    if (prefillApplied.current) { prefillApplied.current = false; return; }
+    setSingle((f) => ({ ...f, rate: "" }));
+  }, [financeType]);
 
 
   useEffect(() => {
     if (!prefill) return;
     const t: FinanceType = prefill.item_type === "silver" ? "silver" : prefill.item_type === "combination" ? "combination" : "gold";
+    if (t !== financeType) prefillApplied.current = true;
     setFinanceType(t);
     // Interest for the new entry starts today, on the newly entered amount only.
     setDate(new Date());
