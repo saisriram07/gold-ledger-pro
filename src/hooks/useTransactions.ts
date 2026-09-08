@@ -38,11 +38,15 @@ export function useTransactions(
   });
 
   const all = query.data;
+  const excludeProfileOnly = opts?.excludeProfileOnly ?? false;
   const data = useMemo(() => {
     if (!all) return all;
-    if (!itemTypeFilter) return all;
-    return all.filter((t) => t.item_type === itemTypeFilter);
-  }, [all, itemTypeFilter]);
+    let rows = all;
+    // Follow-up amounts added from a customer profile live only in that profile.
+    if (excludeProfileOnly) rows = rows.filter((t) => !t.profile_only);
+    if (itemTypeFilter) rows = rows.filter((t) => t.item_type === itemTypeFilter);
+    return rows;
+  }, [all, itemTypeFilter, excludeProfileOnly]);
 
   const addTransaction = useMutation({
     mutationFn: async (tx: Omit<TablesInsert<"transactions">, "user_id">) => {
