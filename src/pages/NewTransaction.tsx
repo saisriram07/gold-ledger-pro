@@ -194,7 +194,7 @@ const NewTransaction = () => {
           interest_rate: parseFloat(single.rate),
         });
       }
-      navigate("/records");
+      navigate(profileOnly && customerId ? `/customer/${customerId}` : "/records");
     } catch {
       // toast handled in hook
     }
