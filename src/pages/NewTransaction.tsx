@@ -36,6 +36,8 @@ const NewTransaction = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [serialNo, setSerialNo] = useState<string>("");
   const [financeType, setFinanceType] = useState<FinanceType>("gold");
+  // Entries started from the "+" action belong to the customer profile only.
+  const [profileOnly, setProfileOnly] = useState(false);
 
   const [cust, setCust] = useState({ ...emptyCust });
   const [single, setSingle] = useState({ ...emptyLeg });
@@ -54,6 +56,7 @@ const NewTransaction = () => {
 
   useEffect(() => {
     if (!prefill) return;
+    setProfileOnly(true);
     const t: FinanceType = prefill.item_type === "silver" ? "silver" : prefill.item_type === "combination" ? "combination" : "gold";
     if (t !== financeType) prefillApplied.current = true;
     setFinanceType(t);
@@ -83,6 +86,7 @@ const NewTransaction = () => {
   }, [prefill]);
 
   const resetForm = () => {
+    setProfileOnly(false);
     setDate(new Date());
     setFinanceType("gold");
     setCust({ ...emptyCust });
@@ -153,6 +157,7 @@ const NewTransaction = () => {
       phone: phoneClean,
       area: cust.area.trim(),
       serial_no: serialNo,
+      profile_only: profileOnly,
     };
 
     try {
