@@ -1,0 +1,2 @@
+ALTER TABLE public.transactions ADD COLUMN IF NOT EXISTS profile_only boolean NOT NULL DEFAULT false;
+CREATE INDEX IF NOT EXISTS transactions_profile_only_idx ON public.transactions (user_id, profile_only);

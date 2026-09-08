@@ -310,6 +310,7 @@ export type Database = {
           phone: string
           photo_url: string | null
           principal_amount: number | null
+          profile_only: boolean
           reminder_date: string | null
           reminder_sent: boolean
           serial_no: string
@@ -342,6 +343,7 @@ export type Database = {
           phone: string
           photo_url?: string | null
           principal_amount?: number | null
+          profile_only?: boolean
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no: string
@@ -374,6 +376,7 @@ export type Database = {
           phone?: string
           photo_url?: string | null
           principal_amount?: number | null
+          profile_only?: boolean
           reminder_date?: string | null
           reminder_sent?: boolean
           serial_no?: string
