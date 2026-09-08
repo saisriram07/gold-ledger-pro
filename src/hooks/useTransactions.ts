@@ -15,7 +15,10 @@ type Transaction = Tables<"transactions">;
  * overlapping data. Now every page reads the same cached row set (one request
  * per session window) and the item-type narrowing happens in memory.
  */
-export function useTransactions(itemTypeFilter?: "gold" | "silver") {
+export function useTransactions(
+  itemTypeFilter?: "gold" | "silver",
+  opts?: { excludeProfileOnly?: boolean },
+) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
