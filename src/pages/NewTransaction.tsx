@@ -36,6 +36,8 @@ const NewTransaction = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [serialNo, setSerialNo] = useState<string>("");
   const [financeType, setFinanceType] = useState<FinanceType>("gold");
+  // Entries started from the "+" action belong to the customer profile only.
+  const [profileOnly, setProfileOnly] = useState(false);
 
   const [cust, setCust] = useState({ ...emptyCust });
   const [single, setSingle] = useState({ ...emptyLeg });
@@ -54,6 +56,7 @@ const NewTransaction = () => {
 
   useEffect(() => {
     if (!prefill) return;
+    setProfileOnly(true);
     const t: FinanceType = prefill.item_type === "silver" ? "silver" : prefill.item_type === "combination" ? "combination" : "gold";
     if (t !== financeType) prefillApplied.current = true;
     setFinanceType(t);
@@ -83,6 +86,7 @@ const NewTransaction = () => {
   }, [prefill]);
 
   const resetForm = () => {
+    setProfileOnly(false);
     setDate(new Date());
     setFinanceType("gold");
     setCust({ ...emptyCust });
@@ -100,6 +104,17 @@ const NewTransaction = () => {
     return null;
   };
 
+  // Combination: each metal is validated on its own and an amount of 0 is allowed,
+  // as long as at least one of Gold / Silver carries a positive amount.
+  const validateComboLeg = (leg: typeof emptyLeg, label: string) => {
+    if (!leg.item_name.trim()) return `${label} item name is required`;
+    if (!leg.weight || parseFloat(leg.weight) <= 0) return `${label} weight must be greater than 0`;
+    if (leg.amount === "" || isNaN(parseFloat(leg.amount)) || parseFloat(leg.amount) < 0)
+      return `${label} amount must be 0 or more`;
+    if (!leg.rate) return `${label} interest rate is required`;
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) return toast.error("Date is required");
@@ -109,8 +124,10 @@ const NewTransaction = () => {
     if (!cust.area.trim()) return toast.error("Area / Address is required");
 
     if (financeType === "combination") {
-      const g = validateLeg(gold, "Gold"); if (g) return toast.error(g);
-      const s = validateLeg(silver, "Silver"); if (s) return toast.error(s);
+      const g = validateComboLeg(gold, "Gold"); if (g) return toast.error(g);
+      const s = validateComboLeg(silver, "Silver"); if (s) return toast.error(s);
+      if ((parseFloat(gold.amount) || 0) + (parseFloat(silver.amount) || 0) <= 0)
+        return toast.error("Enter an amount for Gold or Silver");
     } else {
       const err = validateLeg(single, financeType === "gold" ? "Gold" : "Silver");
       if (err) return toast.error(err);
@@ -140,6 +157,7 @@ const NewTransaction = () => {
       phone: phoneClean,
       area: cust.area.trim(),
       serial_no: serialNo,
+      profile_only: profileOnly,
     };
 
     try {
@@ -176,7 +194,7 @@ const NewTransaction = () => {
           interest_rate: parseFloat(single.rate),
         });
       }
-      navigate("/records");
+      navigate(profileOnly && customerId ? `/customer/${customerId}` : "/records");
     } catch {
       // toast handled in hook
     }
