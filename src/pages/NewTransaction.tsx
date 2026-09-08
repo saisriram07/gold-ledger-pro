@@ -120,8 +120,10 @@ const NewTransaction = () => {
     if (!cust.area.trim()) return toast.error("Area / Address is required");
 
     if (financeType === "combination") {
-      const g = validateLeg(gold, "Gold"); if (g) return toast.error(g);
-      const s = validateLeg(silver, "Silver"); if (s) return toast.error(s);
+      const g = validateComboLeg(gold, "Gold"); if (g) return toast.error(g);
+      const s = validateComboLeg(silver, "Silver"); if (s) return toast.error(s);
+      if ((parseFloat(gold.amount) || 0) + (parseFloat(silver.amount) || 0) <= 0)
+        return toast.error("Enter an amount for Gold or Silver");
     } else {
       const err = validateLeg(single, financeType === "gold" ? "Gold" : "Silver");
       if (err) return toast.error(err);
