@@ -100,6 +100,17 @@ const NewTransaction = () => {
     return null;
   };
 
+  // Combination: each metal is validated on its own and an amount of 0 is allowed,
+  // as long as at least one of Gold / Silver carries a positive amount.
+  const validateComboLeg = (leg: typeof emptyLeg, label: string) => {
+    if (!leg.item_name.trim()) return `${label} item name is required`;
+    if (!leg.weight || parseFloat(leg.weight) <= 0) return `${label} weight must be greater than 0`;
+    if (leg.amount === "" || isNaN(parseFloat(leg.amount)) || parseFloat(leg.amount) < 0)
+      return `${label} amount must be 0 or more`;
+    if (!leg.rate) return `${label} interest rate is required`;
+    return null;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!date) return toast.error("Date is required");
