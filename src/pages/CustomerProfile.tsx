@@ -127,9 +127,8 @@ function DeleteTransactionButton({ txId }: { txId: string }) {
       </AlertDialogContent>
     </AlertDialog>
   );
-    </div>
-  );
-};
+}
+
 
 function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
   // Jama rows already come from the single useAllJama() query on the parent —
