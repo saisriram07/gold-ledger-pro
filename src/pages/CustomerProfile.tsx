@@ -4,6 +4,19 @@ import { useCustomer } from "@/hooks/useCustomers";
 import { useTransactions } from "@/hooks/useTransactions";
 import { useJama, useAllJama } from "@/hooks/useJama";
 import { supabase } from "@/integrations/supabase/client";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -82,6 +95,54 @@ const CustomerProfile = () => {
   );
 };
 
+/** Deletes exactly one transaction (by its database id) plus its own jama rows. */
+function DeleteTransactionButton({ txId }: { txId: string }) {
+  const queryClient = useQueryClient();
+  const [pending, setPending] = useState(false);
+
+  const handleDelete = async () => {
+    setPending(true);
+    const { error: jamaError } = await supabase.from("jama_payments").delete().eq("transaction_id", txId);
+    if (jamaError) {
+      setPending(false);
+      toast.error(jamaError.message);
+      return;
+    }
+    const { error } = await supabase.from("transactions").delete().eq("id", txId);
+    setPending(false);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["transactions"] });
+    queryClient.invalidateQueries({ queryKey: ["jama"] });
+    toast.success("Transaction deleted");
+  };
+
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" aria-label="Delete transaction" disabled={pending}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you sure you want to delete this transaction?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Only this transaction and its own payments will be removed. The customer and other transactions stay.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+
+
 function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
   // Jama rows already come from the single useAllJama() query on the parent —
   // disable the per-loan query so N loan cards don't fire N requests.
@@ -118,6 +179,7 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
             <Badge variant="outline">Serial {tx.serial_no}</Badge>
             <Badge variant="outline">{tx.date}</Badge>
             <Badge variant={tx.status === "completed" ? "secondary" : "default"} className="capitalize">{tx.status}</Badge>
+            <DeleteTransactionButton txId={tx.id} />
           </div>
         </div>
       </CardHeader>
