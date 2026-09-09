@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 const TotalRecords = () => {
-  const { data: transactions = [], isLoading, deleteTransaction, updateStatus } = useTransactions(undefined, { excludeProfileOnly: true });
+  const { data: transactions = [], isLoading, deleteTransaction, updateStatus } = useTransactions();
   const navigate = useNavigate();
 
   const goldAmount = useMemo(() =>
