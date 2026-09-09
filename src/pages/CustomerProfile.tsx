@@ -179,6 +179,7 @@ function LoanCard({ tx, jama }: { tx: any; jama: any[] }) {
             <Badge variant="outline">Serial {tx.serial_no}</Badge>
             <Badge variant="outline">{tx.date}</Badge>
             <Badge variant={tx.status === "completed" ? "secondary" : "default"} className="capitalize">{tx.status}</Badge>
+            <DeleteTransactionButton txId={tx.id} />
           </div>
         </div>
       </CardHeader>
