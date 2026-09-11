@@ -56,7 +56,11 @@ const NewTransaction = () => {
 
   useEffect(() => {
     if (!prefill) return;
-    setProfileOnly(true);
+    // Only entries started from inside a customer's own profile stay profile-only.
+    // Amounts added with "+" in the records ledgers are real transactions and must
+    // count towards Gold / Silver / Combination and overall totals.
+    setProfileOnly(prefill.__fromProfile === true);
+
     const t: FinanceType = prefill.item_type === "silver" ? "silver" : prefill.item_type === "combination" ? "combination" : "gold";
     if (t !== financeType) prefillApplied.current = true;
     setFinanceType(t);
