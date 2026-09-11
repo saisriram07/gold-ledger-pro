@@ -157,9 +157,9 @@ const NewTransaction = () => {
       phone: phoneClean,
       area: cust.area.trim(),
       serial_no: serialNo,
-      // Every saved amount is a real transaction in the single shared ledger,
-      // so it counts in Total Records / Dashboard under its own category.
-      profile_only: false,
+      // Transactions started from an existing customer's "+" action belong
+      // only to that customer's profile and stay out of the records ledgers.
+      profile_only: profileOnly,
     };
 
     try {
