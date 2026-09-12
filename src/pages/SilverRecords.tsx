@@ -5,16 +5,16 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 const SilverRecords = () => {
-  const { data: transactions = [], isLoading, deleteTransaction, updateStatus } = useTransactions("silver", { excludeProfileOnly: true });
+  const { data: transactions = [], allData = [], isLoading, deleteTransaction, updateStatus } = useTransactions("silver", { excludeProfileOnly: true });
   const navigate = useNavigate();
-  const total = transactions.reduce((s, t) => s + Number(t.amount), 0);
+  // Totals include every silver transaction, listing excludes profile-only rows.
+  const silverRows = useMemo(() => allData.filter((t) => t.item_type === "silver"), [allData]);
+  const total = useMemo(() => silverRows.reduce((s, t) => s + Number(t.amount), 0), [silverRows]);
 
   const totalGrams = useMemo(() => {
-    const grams = transactions
-      .filter((t) => t.item_type === "silver")
-      .reduce((sum, t) => sum + (parseFloat(t.weight) || 0), 0);
+    const grams = silverRows.reduce((sum, t) => sum + (parseFloat(t.weight) || 0), 0);
     return `${grams.toFixed(2)} grams`;
-  }, [transactions]);
+  }, [silverRows]);
 
   return (
     <>
