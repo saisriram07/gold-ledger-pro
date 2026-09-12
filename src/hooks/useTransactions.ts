@@ -86,5 +86,7 @@ export function useTransactions(
     onError: (err: Error) => toast.error(err.message),
   });
 
-  return { ...query, data, addTransaction, deleteTransaction, updateStatus };
+  // `allData` is the unfiltered row set — totals must count every real
+  // transaction, including entries added from a customer profile.
+  return { ...query, data, allData: all, addTransaction, deleteTransaction, updateStatus };
 }

@@ -56,9 +56,9 @@ const NewTransaction = () => {
 
   useEffect(() => {
     if (!prefill) return;
-    // A prefilled transaction is an additional entry for the selected customer.
-    // Keep it in that customer's profile instead of duplicating it in Records.
-    setProfileOnly(true);
+    // Only entries started from inside a customer profile stay profile-scoped.
+    // Additions made from the records pages are ordinary transactions.
+    setProfileOnly(!!prefill.__fromProfile);
 
     const t: FinanceType = prefill.item_type === "silver" ? "silver" : prefill.item_type === "combination" ? "combination" : "gold";
     if (t !== financeType) prefillApplied.current = true;

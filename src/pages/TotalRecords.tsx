@@ -5,22 +5,24 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 const TotalRecords = () => {
-  const { data: transactions = [], isLoading, deleteTransaction, updateStatus } = useTransactions(undefined, { excludeProfileOnly: true });
+  const { data: transactions = [], allData = [], isLoading, deleteTransaction, updateStatus } = useTransactions(undefined, { excludeProfileOnly: true });
   const navigate = useNavigate();
 
+  // Totals count every transaction (profile entries included) so the amounts
+  // match the Dashboard, while the listing avoids duplicate profile rows.
   const goldAmount = useMemo(() =>
-    transactions.filter((t) => t.item_type === "gold").reduce((s, t) => s + Number(t.amount), 0),
-    [transactions]
+    allData.filter((t) => t.item_type === "gold").reduce((s, t) => s + Number(t.amount), 0),
+    [allData]
   );
 
   const silverAmount = useMemo(() =>
-    transactions.filter((t) => t.item_type === "silver").reduce((s, t) => s + Number(t.amount), 0),
-    [transactions]
+    allData.filter((t) => t.item_type === "silver").reduce((s, t) => s + Number(t.amount), 0),
+    [allData]
   );
 
   const combinationAmount = useMemo(() =>
-    transactions.filter((t) => t.item_type === "combination").reduce((s, t) => s + Number(t.amount), 0),
-    [transactions]
+    allData.filter((t) => t.item_type === "combination").reduce((s, t) => s + Number(t.amount), 0),
+    [allData]
   );
 
   return (

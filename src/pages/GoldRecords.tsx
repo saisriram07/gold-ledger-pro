@@ -5,16 +5,16 @@ import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 
 const GoldRecords = () => {
-  const { data: transactions = [], isLoading, deleteTransaction, updateStatus } = useTransactions("gold", { excludeProfileOnly: true });
+  const { data: transactions = [], allData = [], isLoading, deleteTransaction, updateStatus } = useTransactions("gold", { excludeProfileOnly: true });
   const navigate = useNavigate();
-  const total = transactions.reduce((s, t) => s + Number(t.amount), 0);
+  // Totals include every gold transaction, listing excludes profile-only rows.
+  const goldRows = useMemo(() => allData.filter((t) => t.item_type === "gold"), [allData]);
+  const total = useMemo(() => goldRows.reduce((s, t) => s + Number(t.amount), 0), [goldRows]);
 
   const totalGrams = useMemo(() => {
-    const grams = transactions
-      .filter((t) => t.item_type === "gold")
-      .reduce((sum, t) => sum + (parseFloat(t.weight) || 0), 0);
+    const grams = goldRows.reduce((sum, t) => sum + (parseFloat(t.weight) || 0), 0);
     return `${grams.toFixed(2)} grams`;
-  }, [transactions]);
+  }, [goldRows]);
 
   return (
     <>
