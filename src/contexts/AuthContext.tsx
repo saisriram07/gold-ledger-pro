@@ -135,10 +135,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const hydrate = async (userId: string, force = false) => {
     if (!force && hydratedFor.current === userId) return;
     hydratedFor.current = userId;
-    const child = await fetchChild(userId);
+    // Run independent lookups in parallel instead of 3+ sequential round trips.
+    const [child] = await Promise.all([fetchChild(userId), fetchRole(userId)]);
     await fetchProfile(userId, child);
-    await fetchRole(userId);
-    if (child && !child.is_disabled) await openChildSession(child);
+    // Audit logging must not block the UI.
+    if (child && !child.is_disabled) void openChildSession(child);
   };
 
   useEffect(() => {
