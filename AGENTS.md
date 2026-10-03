@@ -1,0 +1,1 @@
+- Never put lazily used heavy libs (charts, PDF) in Vite manualChunks — it forces them into the initial modulepreload.
